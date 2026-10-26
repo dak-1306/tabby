@@ -13,8 +13,34 @@ export const ROUTES = {
   INVOICES: "/invoices",
   CREATE: "/create",
   LEDGER: "/ledger",
-  SHARE: "/share",
+  PROFILE: "/profile",
 } as const;
+
+export const HEADER_TITLES: Record<
+  string,
+  { title: string; subtitle: string }
+> = {
+  [ROUTES.HOME]: {
+    title: "Tabby",
+    subtitle: "Chia tiền sòng phẳng",
+  },
+  [ROUTES.INVOICES]: {
+    title: "Danh sách hóa đơn",
+    subtitle: "Quản lý tất cả bill",
+  },
+  [ROUTES.LEDGER]: {
+    title: "Sổ nợ thành viên",
+    subtitle: "Tổng hợp dư nợ nhóm",
+  },
+  [ROUTES.CREATE]: {
+    title: "Tạo hóa đơn mới",
+    subtitle: "Chia tiền khoản chi mới",
+  },
+  [ROUTES.PROFILE]: {
+    title: "Cài đặt ứng dụng",
+    subtitle: "Quản lý tài khoản & dữ liệu",
+  },
+};
 
 export const DRAWER_TEXTS = {
   TOTAL_OWED_LABEL: "Tổng nợ:",

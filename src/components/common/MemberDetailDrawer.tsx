@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { MemberDebtSummary } from "@/types";
 import { useAppStore } from "@/stores/useAppStore";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -32,12 +33,13 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
 
   const currentUser = members.find((m) => m.id === currentUserId);
 
-  // Lọc các hóa đơn liên quan và tính chi tiết số tiền nợ cho từng hóa đơn
   const unpaidInvoicesWithAmount = invoices
     .filter(
       (inv) =>
         inv.paidByMemberId === currentUserId &&
-        inv.items.some((item) => item.assignedMemberIds.includes(member.memberId))
+        inv.items.some((item) =>
+          item.assignedMemberIds.includes(member.memberId),
+        ),
     )
     .map((inv) => {
       const amountOwedForBill = inv.items.reduce((sum, item) => {
@@ -75,11 +77,15 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
       <DrawerContent>
         <DrawerHeader>
           <div className="flex items-center gap-3">
-            <div className="size-11 rounded-full bg-primary/15 border border-primary/30 text-primary flex items-center justify-center font-bold text-base shrink-0">
-              {member.memberAvatar}
-            </div>
+            <MemberAvatar
+              name={member.memberName}
+              fallbackText={member.memberAvatar}
+              size="lg"
+            />
             <div className="text-left">
-              <DrawerTitle className="text-base font-bold">{member.memberName}</DrawerTitle>
+              <DrawerTitle className="text-base font-bold">
+                {member.memberName}
+              </DrawerTitle>
               <DrawerDescription className="text-xs text-muted-foreground mt-0.5">
                 {DRAWER_TEXTS.TOTAL_OWED_LABEL}{" "}
                 <span className="font-bold text-primary">
@@ -106,9 +112,9 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                     {new Date(inv.createdAt).toLocaleDateString(LOCALE_VI)}
                   </p>
                 </div>
-                {/* Hiển thị số tiền nợ riêng của hóa đơn này */}
                 <span className="font-bold text-primary text-xs shrink-0">
-                  {inv.amountOwedForBill.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
+                  {inv.amountOwedForBill.toLocaleString(LOCALE_VI)}{" "}
+                  {CURRENCY_SYMBOL}
                 </span>
               </div>
             ))}
@@ -116,8 +122,16 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
         </div>
 
         <DrawerFooter className="flex-col gap-2 pt-3">
-          <Button size="lg" className="w-full gap-2 min-h-[44px]" onClick={handleCopyText}>
-            {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+          <Button
+            size="lg"
+            className="w-full gap-2 min-h-[44px]"
+            onClick={handleCopyText}
+          >
+            {copied ? (
+              <Check className="size-4" />
+            ) : (
+              <Copy className="size-4" />
+            )}
             {copied ? DRAWER_TEXTS.BTN_COPIED : DRAWER_TEXTS.BTN_COPY_DEMAND}
           </Button>
 
@@ -131,7 +145,15 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
             {DRAWER_TEXTS.BTN_CLEAR_DEBT}
           </Button>
 
-          <DrawerClose render={<Button variant="ghost" className="w-full min-h-[44px]" onClick={onClose} />}>
+          <DrawerClose
+            render={
+              <Button
+                variant="ghost"
+                className="w-full min-h-[44px]"
+                onClick={onClose}
+              />
+            }
+          >
             {DRAWER_TEXTS.BTN_CLOSE}
           </DrawerClose>
         </DrawerFooter>

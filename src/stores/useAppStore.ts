@@ -1,64 +1,81 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { Member, Invoice } from "@/types";
-import { MOCK_MEMBERS, MOCK_INVOICES, CURRENT_USER_ID } from "@/data/mockData";
-import { STORAGE_KEY, INVOICE_STATUS } from "@/constants";
+import { AppState, Member } from "@/types";
+import { STORAGE_KEY } from "@/constants";
 
-interface AppState {
-  currentUserId: string;
-  members: Member[];
-  invoices: Invoice[];
-  addInvoice: (invoice: Invoice) => void;
-  addMember: (member: Member) => void;
-  clearMemberDebt: (memberId: string) => void;
-  markInvoiceCompleted: (invoiceId: string) => void;
-  resetToMock: () => void;
-}
+// Chỉ khởi tạo 1 tài khoản duy nhất cho Host (Người chi tiền)
+const initialMembers: Member[] = [
+  { id: "m1", name: "Bạn (Host)", avatar: "H" },
+];
 
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      currentUserId: CURRENT_USER_ID,
-      members: MOCK_MEMBERS,
-      invoices: MOCK_INVOICES,
+      currentUserId: "m1",
+      members: initialMembers,
+      invoices: [],
 
-      addInvoice: (newInvoice) =>
-        set((state) => ({ invoices: [newInvoice, ...state.invoices] })),
+      addInvoice: (invoice) =>
+        set((state) => ({ invoices: [invoice, ...state.invoices] })),
 
-      addMember: (newMember) =>
-        set((state) => ({ members: [...state.members, newMember] })),
+      markInvoiceCompleted: (invoiceId) =>
+        set((state) => ({
+          invoices: state.invoices.map((inv) =>
+            inv.id === invoiceId ? { ...inv, status: "completed" } : inv,
+          ),
+        })),
 
-      // Gạch nợ toàn bộ tiền của 1 thành viên
       clearMemberDebt: (memberId) =>
         set((state) => ({
           invoices: state.invoices.map((inv) => {
             if (inv.paidByMemberId !== state.currentUserId) return inv;
+            const hasMemberInItems = inv.items.some((item) =>
+              item.assignedMemberIds.includes(memberId),
+            );
+            if (!hasMemberInItems) return inv;
+
             const updatedItems = inv.items.map((item) => ({
               ...item,
               assignedMemberIds: item.assignedMemberIds.filter(
                 (id) => id !== memberId,
               ),
             }));
-            return { ...inv, items: updatedItems };
+
+            const remainingUnpaidOthers = updatedItems.some((item) =>
+              item.assignedMemberIds.some((id) => id !== state.currentUserId),
+            );
+
+            return {
+              ...inv,
+              items: updatedItems,
+              status: remainingUnpaidOthers ? "partial" : "completed",
+            };
           }),
         })),
 
-      // Đánh dấu hóa đơn đã thu xong
-      markInvoiceCompleted: (invoiceId) =>
+      addMember: (member) =>
+        set((state) => ({ members: [...state.members, member] })),
+
+      updateCurrentUserProfile: (profileData) =>
         set((state) => ({
-          invoices: state.invoices.map((inv) =>
-            inv.id === invoiceId
-              ? { ...inv, status: INVOICE_STATUS.COMPLETED }
-              : inv,
+          members: state.members.map((m) =>
+            m.id === state.currentUserId ? { ...m, ...profileData } : m,
           ),
         })),
 
-      resetToMock: () =>
-        set({
-          currentUserId: CURRENT_USER_ID,
-          members: MOCK_MEMBERS,
-          invoices: MOCK_INVOICES,
-        }),
+      importData: (newState) =>
+        set(() => ({
+          currentUserId: newState.currentUserId || "m1",
+          members: newState.members || initialMembers,
+          invoices: newState.invoices || [],
+        })),
+
+      resetData: () =>
+        set(() => ({
+          currentUserId: "m1",
+          members: initialMembers,
+          invoices: [],
+        })),
     }),
     {
       name: STORAGE_KEY,

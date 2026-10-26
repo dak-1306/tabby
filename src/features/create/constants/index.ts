@@ -1,0 +1,16 @@
+export const CREATE_TEXTS = {
+  TITLE_PLACEHOLDER: "Ví dụ: Lẩu Haidilao Landmark 81...",
+  TITLE_LABEL: "Tên hóa đơn",
+  MEMBERS_SECTION_TITLE: "Thành viên tham gia",
+  ADD_MEMBER_BTN: "Thêm người mới",
+  NEW_MEMBER_NAME_PLACEHOLDER: "Nhập tên người mới...",
+  ITEMS_SECTION_TITLE: "Danh sách món ăn & Dịch vụ",
+  ADD_ITEM_BTN: "Thêm món mới",
+  ITEM_NAME_PLACEHOLDER: "Tên món...",
+  ITEM_PRICE_PLACEHOLDER: "Số tiền...",
+  LIVE_PREVIEW_TITLE: "Hóa đơn xem trước",
+  SUBMIT_BTN: "Lưu & Chia tiền hóa đơn",
+  SUCCESS_MSG: "Đã tạo hóa đơn thành công!",
+  SELECT_ALL: "Chọn tất cả",
+  DESELECT_ALL: "Bỏ chọn",
+} as const;

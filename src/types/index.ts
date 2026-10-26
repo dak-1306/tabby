@@ -1,8 +1,3 @@
-import { INVOICE_STATUS } from "@/constants";
-
-export type InvoiceStatus =
-  (typeof INVOICE_STATUS)[keyof typeof INVOICE_STATUS];
-
 export interface Member {
   id: string;
   name: string;
@@ -21,10 +16,10 @@ export interface InvoiceItem {
 export interface Invoice {
   id: string;
   title: string;
-  createdAt: string;
   paidByMemberId: string;
+  createdAt: string;
+  status: "completed" | "partial";
   items: InvoiceItem[];
-  status: InvoiceStatus;
 }
 
 export interface MemberDebtSummary {
@@ -33,4 +28,17 @@ export interface MemberDebtSummary {
   memberAvatar: string;
   totalOwed: number;
   unpaidBillsCount: number;
+}
+
+export interface AppState {
+  currentUserId: string;
+  members: Member[];
+  invoices: Invoice[];
+  addInvoice: (invoice: Invoice) => void;
+  markInvoiceCompleted: (invoiceId: string) => void;
+  clearMemberDebt: (memberId: string) => void;
+  addMember: (member: Member) => void;
+  updateCurrentUserProfile: (profileData: Partial<Member>) => void;
+  importData: (newState: Partial<AppState>) => void;
+  resetData: () => void;
 }

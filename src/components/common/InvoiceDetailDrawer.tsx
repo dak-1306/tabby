@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { FormattedRecentInvoice } from "@/features/home/types";
 import { useAppStore } from "@/stores/useAppStore";
+import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -31,23 +32,17 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
   onClose,
 }) => {
   const [copied, setCopied] = useState(false);
-  const { invoices, markInvoiceCompleted } = useAppStore();
+  const { invoices, members, markInvoiceCompleted } = useAppStore();
 
   if (!invoice) return null;
 
   const fullInvoice = invoices.find((inv) => inv.id === invoice.id);
 
   const handleCopySummary = () => {
-    const text = `Tóm tắt Bill: ${invoice.title}\nTổng bill: ${invoice.totalAmount.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}\nCòn nợ: ${invoice.uncollectedAmount.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}\nMọi người check chuyển khoản giúp mình nha!`;
-
+    const text = `Tóm tắt Bill: ${invoice.title}\nTổng bill: ${invoice.totalAmount.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}\nMọi người check chuyển khoản giúp mình nha!`;
     navigator.clipboard?.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleMarkCompleted = () => {
-    markInvoiceCompleted(invoice.id);
-    onClose();
   };
 
   return (
@@ -73,18 +68,30 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
             {fullInvoice?.items.map((item) => (
               <div
                 key={item.id}
-                className="p-2.5 rounded-xl bg-card border border-border/60 flex items-center justify-between text-xs"
+                className="p-2.5 rounded-xl bg-card border border-border/60 space-y-1 text-xs"
               >
-                <div>
-                  <p className="font-semibold text-foreground">{item.name}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {DRAWER_TEXTS.SPLIT_WITH_LABEL}{" "}
-                    {item.assignedMemberIds.length} người
-                  </p>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-foreground">
+                    {item.name}
+                  </span>
+                  <span className="font-bold text-primary">
+                    {item.price.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
+                  </span>
                 </div>
-                <span className="font-bold text-foreground">
-                  {item.price.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
-                </span>
+                <div className="flex items-center gap-1 pt-1">
+                  {item.assignedMemberIds.map((mId) => {
+                    const m = members.find((mem) => mem.id === mId);
+                    if (!m) return null;
+                    return (
+                      <MemberAvatar
+                        key={mId}
+                        name={m.name}
+                        fallbackText={m.avatar}
+                        size="xs"
+                      />
+                    );
+                  })}
+                </div>
               </div>
             ))}
           </div>
@@ -109,7 +116,10 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
               variant="outline"
               size="lg"
               className="w-full gap-2 min-h-[44px]"
-              onClick={handleMarkCompleted}
+              onClick={() => {
+                markInvoiceCompleted(invoice.id);
+                onClose();
+              }}
             >
               <CheckCircle2 className="size-4 text-primary" />
               {DRAWER_TEXTS.BTN_MARK_COMPLETED}
