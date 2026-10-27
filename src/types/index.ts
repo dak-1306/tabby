@@ -1,3 +1,5 @@
+export type InvoiceStatus = "completed" | "partial";
+
 export interface Member {
   id: string;
   name: string;
@@ -18,7 +20,7 @@ export interface Invoice {
   title: string;
   paidByMemberId: string;
   createdAt: string;
-  status: "completed" | "partial";
+  status: InvoiceStatus;
   items: InvoiceItem[];
 }
 
@@ -35,9 +37,12 @@ export interface AppState {
   members: Member[];
   invoices: Invoice[];
   addInvoice: (invoice: Invoice) => void;
+  updateInvoice: (invoice: Invoice) => void;
+  deleteInvoice: (invoiceId: string) => void;
   markInvoiceCompleted: (invoiceId: string) => void;
   clearMemberDebt: (memberId: string) => void;
   addMember: (member: Member) => void;
+  deleteMember: (memberId: string) => void;
   updateCurrentUserProfile: (profileData: Partial<Member>) => void;
   importData: (newState: Partial<AppState>) => void;
   resetData: () => void;

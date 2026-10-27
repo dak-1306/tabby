@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { Header } from "@/components/layout/Header";
 import { useCreateInvoice } from "../hooks/useCreateInvoice";
 import { MemberSelector } from "./MemberSelector";
@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Plus, Check } from "lucide-react";
 import { CREATE_TEXTS } from "../constants";
 
-export const CreateInvoiceView: React.FC = () => {
+const CreateInvoiceForm: React.FC = () => {
   const {
+    isEditMode,
     title,
     setTitle,
     allMembers,
@@ -28,9 +29,7 @@ export const CreateInvoiceView: React.FC = () => {
   } = useCreateInvoice();
 
   return (
-    <div className="flex flex-col h-full w-full bg-background text-foreground relative overflow-hidden">
-      <Header />
-
+    <>
       <main className="flex-1 overflow-y-auto px-4 py-4 pb-32 scrollbar-none space-y-5">
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -90,9 +89,24 @@ export const CreateInvoiceView: React.FC = () => {
           onClick={handleSubmit}
         >
           <Check className="size-5" />
-          {CREATE_TEXTS.SUBMIT_BTN}
+          {isEditMode ? CREATE_TEXTS.SUBMIT_EDIT_BTN : CREATE_TEXTS.SUBMIT_BTN}
         </Button>
       </div>
+    </>
+  );
+};
+
+export const CreateInvoiceView: React.FC = () => {
+  return (
+    <div className="flex flex-col h-full w-full bg-background text-foreground relative overflow-hidden">
+      <Header />
+      <Suspense
+        fallback={
+          <div className="p-4 text-xs text-muted-foreground">Đang tải...</div>
+        }
+      >
+        <CreateInvoiceForm />
+      </Suspense>
     </div>
   );
 };

@@ -3,7 +3,6 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { AppState, Member } from "@/types";
 import { STORAGE_KEY } from "@/constants";
 
-// Chỉ khởi tạo 1 tài khoản duy nhất cho Host (Người chi tiền)
 const initialMembers: Member[] = [
   { id: "m1", name: "Bạn (Host)", avatar: "H" },
 ];
@@ -17,6 +16,18 @@ export const useAppStore = create<AppState>()(
 
       addInvoice: (invoice) =>
         set((state) => ({ invoices: [invoice, ...state.invoices] })),
+
+      updateInvoice: (updatedInvoice) =>
+        set((state) => ({
+          invoices: state.invoices.map((inv) =>
+            inv.id === updatedInvoice.id ? updatedInvoice : inv,
+          ),
+        })),
+
+      deleteInvoice: (invoiceId) =>
+        set((state) => ({
+          invoices: state.invoices.filter((inv) => inv.id !== invoiceId),
+        })),
 
       markInvoiceCompleted: (invoiceId) =>
         set((state) => ({
@@ -55,6 +66,11 @@ export const useAppStore = create<AppState>()(
 
       addMember: (member) =>
         set((state) => ({ members: [...state.members, member] })),
+
+      deleteMember: (memberId) =>
+        set((state) => ({
+          members: state.members.filter((m) => m.id !== memberId),
+        })),
 
       updateCurrentUserProfile: (profileData) =>
         set((state) => ({

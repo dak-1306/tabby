@@ -13,4 +13,5 @@ export const CREATE_TEXTS = {
   SUCCESS_MSG: "Đã tạo hóa đơn thành công!",
   SELECT_ALL: "Chọn tất cả",
   DESELECT_ALL: "Bỏ chọn",
+  SUBMIT_EDIT_BTN: "Cập nhật hóa đơn",
 } as const;
