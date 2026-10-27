@@ -6,27 +6,35 @@ import { useCreateInvoice } from "../hooks/useCreateInvoice";
 import { MemberSelector } from "./MemberSelector";
 import { ItemInputRow } from "./ItemInputRow";
 import { LiveReceiptPreview } from "./LiveReceiptPreview";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Check } from "lucide-react";
 import { CREATE_TEXTS } from "../constants";
 
 const CreateInvoiceForm: React.FC = () => {
   const {
+    form,
     isEditMode,
-    title,
-    setTitle,
+    fields,
     allMembers,
     selectedMemberIds,
     selectedMembers,
-    items,
     breakdowns,
     handleToggleMember,
     handleAddNewMember,
     handleAddItem,
-    handleUpdateItem,
     handleRemoveItem,
     handleSubmit,
   } = useCreateInvoice();
+
+  const {
+    register,
+    watch,
+    formState: { errors },
+  } = form;
+
+  const title = watch("title");
+  const items = watch("items");
 
   return (
     <>
@@ -35,13 +43,17 @@ const CreateInvoiceForm: React.FC = () => {
           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {CREATE_TEXTS.TITLE_LABEL}
           </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+          <Input
+            {...register("title")}
             placeholder={CREATE_TEXTS.TITLE_PLACEHOLDER}
-            className="w-full min-h-[44px] px-3.5 py-2.5 bg-card border border-border/60 rounded-xl text-xs font-bold focus:outline-none focus:border-primary/60"
+            className="font-bold"
+            aria-invalid={Boolean(errors.title)}
           />
+          {errors.title && (
+            <p className="text-[11px] text-destructive font-medium">
+              {errors.title.message}
+            </p>
+          )}
         </div>
 
         <MemberSelector
@@ -55,13 +67,13 @@ const CreateInvoiceForm: React.FC = () => {
           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
             {CREATE_TEXTS.ITEMS_SECTION_TITLE}
           </label>
-          {items.map((item) => (
+          {fields.map((field, index) => (
             <ItemInputRow
-              key={item.id}
-              item={item}
+              key={field.id}
+              index={index}
+              form={form}
               members={selectedMembers}
-              onUpdate={handleUpdateItem}
-              onRemove={() => handleRemoveItem(item.id)}
+              onRemove={() => handleRemoveItem(index)}
             />
           ))}
           <button
@@ -76,7 +88,7 @@ const CreateInvoiceForm: React.FC = () => {
 
         <LiveReceiptPreview
           title={title}
-          items={items}
+          items={items || []}
           selectedMembers={selectedMembers}
           breakdowns={breakdowns}
         />

@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAppStore } from "@/stores/useAppStore";
-import { UserProfileFormData, StorageStats } from "../types";
+import { profileSchema, ProfileFormData } from "@/lib/validations";
+import { StorageStats } from "../types";
 import { STORAGE_KEY } from "@/constants";
 
 export const useProfileSettings = () => {
@@ -17,13 +20,17 @@ export const useProfileSettings = () => {
     [members, currentUserId],
   );
 
-  const [formData, setFormData] = useState<UserProfileFormData>({
-    name: currentUser?.name || "",
-    bankName: currentUser?.bankName || "",
-    accountNumber: currentUser?.accountNumber || "",
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: currentUser?.name || "",
+      bankName: currentUser?.bankName || "",
+      accountNumber: currentUser?.accountNumber || "",
+    },
   });
 
   const [isSaved, setIsSaved] = useState(false);
+  const [isBankDrawerOpen, setIsBankDrawerOpen] = useState(false);
   const [storageStats, setStorageStats] = useState<StorageStats>({
     usedKb: "0.00",
     percent: 0,
@@ -34,20 +41,22 @@ export const useProfileSettings = () => {
     const raw = localStorage.getItem(STORAGE_KEY) || "";
     const bytes = new Blob([raw]).size;
     const kb = (bytes / 1024).toFixed(2);
-    const maxKb = 5120; // ~5MB localStorage
-    const percent = Math.min(100, Math.round((bytes / (maxKb * 1024)) * 100));
+    const percent = Math.min(100, Math.round((bytes / (5120 * 1024)) * 100));
     setStorageStats({ usedKb: kb, percent });
   };
 
   useEffect(() => {
-    calculateStorageSize();
+    const timer = setTimeout(() => {
+      calculateStorageSize();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [members]);
 
-  const handleSaveProfile = () => {
-    updateCurrentUserProfile(formData);
+  const handleSave = form.handleSubmit((data) => {
+    updateCurrentUserProfile(data);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
-  };
+  });
 
   const handleExportData = () => {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -85,11 +94,12 @@ export const useProfileSettings = () => {
   };
 
   return {
-    formData,
-    setFormData,
+    form,
     isSaved,
+    isBankDrawerOpen,
+    setIsBankDrawerOpen,
     storageStats,
-    handleSaveProfile,
+    handleSave,
     handleExportData,
     handleImportData,
     handleResetApp,

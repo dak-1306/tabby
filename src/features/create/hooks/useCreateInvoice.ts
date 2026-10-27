@@ -1,8 +1,10 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useAppStore } from "@/stores/useAppStore";
-import { DraftItem } from "../types";
+import { invoiceSchema, InvoiceFormData } from "@/lib/validations";
 import { calculateMemberSplits } from "../utils/splitCalculator";
 import { ROUTES, TOAST_TEXTS } from "@/constants";
 
@@ -27,7 +29,6 @@ export const useCreateInvoice = () => {
 
   const isEditMode = Boolean(existingInvoice);
 
-  // 1. Tính toán giá trị khởi tạo động từ existingInvoice
   const initialMemberIds = useMemo(() => {
     if (!existingInvoice) return [currentUserId];
     const set = new Set<string>([existingInvoice.paidByMemberId]);
@@ -40,7 +41,12 @@ export const useCreateInvoice = () => {
   const initialItems = useMemo(() => {
     if (!existingInvoice) {
       return [
-        { id: "1", name: "", price: 0, assignedMemberIds: [currentUserId] },
+        {
+          id: `item_${Date.now()}`,
+          name: "",
+          price: 0,
+          assignedMemberIds: [currentUserId],
+        },
       ];
     }
     return existingInvoice.items.map((item) => ({
@@ -51,30 +57,49 @@ export const useCreateInvoice = () => {
     }));
   }, [existingInvoice, currentUserId]);
 
-  // 2. Khởi tạo State lười (Lazy Initializer)
-  const [title, setTitle] = useState(() => existingInvoice?.title ?? "");
-  const [selectedMemberIds, setSelectedMemberIds] =
-    useState<string[]>(initialMemberIds);
-  const [items, setItems] = useState<DraftItem[]>(initialItems);
+  const form = useForm<InvoiceFormData>({
+    resolver: zodResolver(invoiceSchema),
+    defaultValues: {
+      title: existingInvoice?.title ?? "",
+      selectedMemberIds: initialMemberIds,
+      items: initialItems,
+    },
+  });
 
-  // 3. Đồng bộ State trực tiếp trong quá trình Render khi editId/existingInvoice thay đổi (Thay thế useEffect)
+  const { fields, append, remove, update } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
+
   const [prevInvoiceId, setPrevInvoiceId] = useState<string | null>(
     existingInvoice?.id ?? null,
   );
 
   if (existingInvoice && existingInvoice.id !== prevInvoiceId) {
     setPrevInvoiceId(existingInvoice.id);
-    setTitle(existingInvoice.title);
-    setSelectedMemberIds(initialMemberIds);
-    setItems(initialItems);
+    form.reset({
+      title: existingInvoice.title,
+      selectedMemberIds: initialMemberIds,
+      items: initialItems,
+    });
   } else if (!existingInvoice && prevInvoiceId !== null) {
     setPrevInvoiceId(null);
-    setTitle("");
-    setSelectedMemberIds([currentUserId]);
-    setItems([
-      { id: "1", name: "", price: 0, assignedMemberIds: [currentUserId] },
-    ]);
+    form.reset({
+      title: "",
+      selectedMemberIds: [currentUserId],
+      items: [
+        {
+          id: `item_${Date.now()}`,
+          name: "",
+          price: 0,
+          assignedMemberIds: [currentUserId],
+        },
+      ],
+    });
   }
+
+  const selectedMemberIds = form.watch("selectedMemberIds");
+  const watchItems = form.watch("items");
 
   const selectedMembers = useMemo(
     () => members.filter((m) => selectedMemberIds.includes(m.id)),
@@ -82,88 +107,69 @@ export const useCreateInvoice = () => {
   );
 
   const breakdowns = useMemo(
-    () => calculateMemberSplits(items, selectedMembers),
-    [items, selectedMembers],
+    () => calculateMemberSplits(watchItems || [], selectedMembers),
+    [watchItems, selectedMembers],
   );
 
   const handleToggleMember = (mId: string) => {
-    setSelectedMemberIds((prev) =>
-      prev.includes(mId) ? prev.filter((id) => id !== mId) : [...prev, mId],
-    );
+    const current = form.getValues("selectedMemberIds");
+    const updated = current.includes(mId)
+      ? current.filter((id) => id !== mId)
+      : [...current, mId];
+    form.setValue("selectedMemberIds", updated);
   };
 
   const handleAddNewMember = (name: string) => {
     const newM = { id: `m_${Date.now()}`, name, avatar: name[0].toUpperCase() };
     addMember(newM);
-    setSelectedMemberIds((prev) => [...prev, newM.id]);
+    const current = form.getValues("selectedMemberIds");
+    form.setValue("selectedMemberIds", [...current, newM.id]);
   };
 
   const handleAddItem = () => {
-    setItems((prev) => [
-      ...prev,
-      {
-        id: `item_${Date.now()}`,
-        name: "",
-        price: 0,
-        assignedMemberIds: [...selectedMemberIds],
-      },
-    ]);
+    append({
+      id: `item_${Date.now()}`,
+      name: "",
+      price: 0,
+      assignedMemberIds: [...selectedMemberIds],
+    });
   };
 
-  const handleUpdateItem = (updated: DraftItem) => {
-    setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
-  };
-
-  const handleRemoveItem = (itemId: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== itemId));
-  };
-
-  const handleSubmit = () => {
-    if (!title.trim() || items.length === 0) return;
-
-    const formattedItems = items.map((i) => ({
-      id: i.id,
-      name: i.name || "Món chưa tên",
-      price: i.price,
-      assignedMemberIds: i.assignedMemberIds,
-    }));
-
+  const handleSubmit = form.handleSubmit((data) => {
     if (isEditMode && existingInvoice) {
       updateInvoice({
         ...existingInvoice,
-        title,
-        items: formattedItems,
+        title: data.title,
+        items: data.items,
       });
       toast.success(TOAST_TEXTS.UPDATE_INVOICE_SUCCESS);
     } else {
       addInvoice({
         id: `inv_${Date.now()}`,
-        title,
+        title: data.title,
         paidByMemberId: currentUserId,
         createdAt: new Date().toISOString(),
         status: "partial",
-        items: formattedItems,
+        items: data.items,
       });
       toast.success(TOAST_TEXTS.CREATE_INVOICE_SUCCESS);
     }
-
     router.push(ROUTES.HOME);
-  };
+  });
 
   return {
+    form,
     isEditMode,
-    title,
-    setTitle,
+    fields,
     allMembers: members,
     selectedMemberIds,
     selectedMembers,
-    items,
     breakdowns,
     handleToggleMember,
     handleAddNewMember,
     handleAddItem,
-    handleUpdateItem,
-    handleRemoveItem,
+    handleRemoveItem: remove,
+    handleUpdateItem: update,
     handleSubmit,
   };
 };

@@ -11,11 +11,12 @@ import { PROFILE_TEXTS } from "../constants";
 
 export const ProfileView: React.FC = () => {
   const {
-    formData,
-    setFormData,
+    form,
     isSaved,
+    isBankDrawerOpen,
+    setIsBankDrawerOpen,
     storageStats,
-    handleSaveProfile,
+    handleSave,
     handleExportData,
     handleImportData,
     handleResetApp,
@@ -27,10 +28,11 @@ export const ProfileView: React.FC = () => {
 
       <main className="flex-1 overflow-y-auto px-4 py-4 pb-24 scrollbar-none space-y-4">
         <UserProfileSection
-          formData={formData}
-          onChange={setFormData}
-          onSave={handleSaveProfile}
+          form={form}
+          onSave={handleSave}
           isSaved={isSaved}
+          isBankDrawerOpen={isBankDrawerOpen}
+          setIsBankDrawerOpen={setIsBankDrawerOpen}
         />
 
         <DataBackupSection
