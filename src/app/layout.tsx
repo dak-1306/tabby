@@ -1,22 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/common/theme-provider";
 import "./globals.css";
-import { MobileContainer } from "@/components/common/MobileContainer";
-import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Tabby - Chia tiền sòng phẳng & Tinh tế",
-  description: "Web App mobile chia tiền hóa đơn nhanh gọn, lưu LocalStorage",
+  title: "Tabby - Chia tiền sòng phẳng",
+  description: "Ứng dụng quản lý và chia tiền hóa đơn PWA offline-first",
 };
 
 export default function RootLayout({
@@ -25,12 +17,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className="dark">
+    <html lang="vi" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-primary/20`}
+        className={`${inter.className} bg-background text-foreground antialiased`}
       >
-        <Toaster position="top-center" richColors closeButton />
-        <MobileContainer>{children}</MobileContainer>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="mx-auto max-w-md min-h-screen flex flex-col bg-background relative shadow-2xl">
+            {children}
+          </div>
+          <Toaster position="top-center" richColors closeButton />
+        </ThemeProvider>
       </body>
     </html>
   );

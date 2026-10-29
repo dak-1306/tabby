@@ -15,10 +15,14 @@ export const StatCard: React.FC<StatCardProps> = ({
   variant = "default",
 }) => {
   const variantStyles = {
-    default: "bg-card/80 border-border/50 text-foreground",
-    success: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-    warning: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-    primary: "bg-primary/10 border-primary/20 text-primary",
+    default:
+      "bg-card border-border/60 text-foreground dark:bg-card-dark dark:border-border/50 dark:text-foreground",
+    success:
+      "bg-green-500/10 border-green-500/20 text-green-400 dark:bg-green-500/20 dark:border-green-500/30 dark:text-green-400",
+    warning:
+      "bg-yellow-500/10 border-yellow-500/20 text-yellow-500 dark:bg-yellow-500/20 dark:border-yellow-500/30 dark:text-yellow-400",
+    primary:
+      "bg-primary/10 border-primary/20 text-primary dark:bg-primary/20 dark:border-primary/30 dark:text-primary",
   };
 
   return (

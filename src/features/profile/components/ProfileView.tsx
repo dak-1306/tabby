@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useProfileSettings } from "../hooks/useProfileSettings";
 import { UserProfileSection } from "./UserProfileSection";
+import { ThemeSection } from "./ThemeSection";
 import { DataBackupSection } from "./DataBackupSection";
 import { DangerZoneSection } from "./DangerZoneSection";
 import { PROFILE_TEXTS } from "../constants";
@@ -34,6 +35,8 @@ export const ProfileView: React.FC = () => {
           isBankDrawerOpen={isBankDrawerOpen}
           setIsBankDrawerOpen={setIsBankDrawerOpen}
         />
+
+        <ThemeSection />
 
         <DataBackupSection
           storageStats={storageStats}
