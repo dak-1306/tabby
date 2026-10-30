@@ -14,7 +14,7 @@ export const PROFILE_TEXTS = {
   THEME_LIGHT: "Sáng",
   THEME_DARK: "Tối",
   THEME_SYSTEM: "Hệ thống",
-  STORAGE_USED_LABEL: "Dung lượng đã dùng",
+  STORAGE_USAGE_LABEL: "Dung lượng bộ nhớ",
   EXPORT_BTN: "Tải file sao lưu (JSON)",
   IMPORT_BTN: "Khôi phục dữ liệu từ file",
   RESET_APP_BTN: "Xóa toàn bộ dữ liệu ứng dụng",
