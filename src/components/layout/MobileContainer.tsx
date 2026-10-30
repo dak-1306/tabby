@@ -20,7 +20,7 @@ export const MobileContainer: React.FC<MobileContainerProps> = ({
         </div>
 
         {/* Viewport Container */}
-        <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] bg-background">
+        <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative bg-background">
           {children}
         </div>
       </div>

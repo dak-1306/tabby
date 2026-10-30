@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { HEADER_TITLES, ROUTES } from "@/constants";
 import { ArrowLeft, Settings } from "lucide-react";
@@ -28,8 +29,15 @@ export const Header: React.FC = () => {
             <ArrowLeft className="size-5" />
           </button>
         ) : (
-          <div className="size-9 rounded-full bg-primary/15 border border-primary/30 text-primary flex items-center justify-center font-extrabold text-sm shrink-0">
-            T
+          <div className="size-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 p-1.5">
+            <Image
+              src="/icons/logo.svg"
+              alt="Tabby Logo"
+              width={24}
+              height={24}
+              className="size-6 object-contain"
+              priority
+            />
           </div>
         )}
 
