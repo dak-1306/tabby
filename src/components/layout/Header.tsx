@@ -17,7 +17,7 @@ export const Header: React.FC = () => {
     pathname === ROUTES.CREATE || pathname === ROUTES.PROFILE;
 
   return (
-    <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/60 px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex items-center justify-between">
+    <header className="shrink-0 w-full bg-background/95 backdrop-blur-md border-b border-border/60 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] flex items-center justify-between z-20">
       <div className="flex items-center gap-2.5">
         {hasBackButton ? (
           <button
@@ -51,7 +51,6 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Lối vào trang Cài đặt từ Trang chủ / Hóa đơn / Sổ nợ */}
       {!hasBackButton && (
         <Link
           href={ROUTES.PROFILE}

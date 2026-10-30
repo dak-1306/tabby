@@ -27,7 +27,7 @@ export const InvoicesView: React.FC = () => {
     <div className="flex flex-col h-full w-full bg-background text-foreground relative overflow-hidden">
       <Header />
 
-      <main className="flex-1 overflow-y-auto px-4 py-4 pb-24 scrollbar-none flex flex-col gap-4">
+      <main className="flex-1 overflow-y-auto px-4 py-4 scrollbar-none flex flex-col gap-4">
         <InvoiceStats stats={stats} />
 
         <InvoiceFilterBar

@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 export const BottomNav: React.FC = () => {
   const pathname = usePathname();
 
-  // Không hiển thị BottomNav tại trang Tạo hóa đơn
   if (pathname === ROUTES.CREATE) return null;
 
   const isHome = pathname === ROUTES.HOME;
@@ -26,7 +25,7 @@ export const BottomNav: React.FC = () => {
     : { href: ROUTES.LEDGER, label: "Sổ nợ", icon: Users };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-background/95 backdrop-blur-md border-t border-border/60 z-30 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] px-2">
+    <nav className="shrink-0 w-full bg-background/95 backdrop-blur-md border-t border-border/60 z-20 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] px-2">
       <div className="flex items-center justify-around h-12">
         <Link
           href={leftTab.href}

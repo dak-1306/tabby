@@ -37,8 +37,9 @@ const CreateInvoiceForm: React.FC = () => {
   const items = watch("items");
 
   return (
-    <>
-      <main className="flex-1 overflow-y-auto px-4 py-4 pb-32 scrollbar-none space-y-5">
+    <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden">
+      {/* Vùng cuộn nội dung form chính */}
+      <main className="flex-1 min-h-0 overflow-y-auto px-4 py-4 scrollbar-none space-y-5">
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {CREATE_TEXTS.TITLE_LABEL}
@@ -94,7 +95,8 @@ const CreateInvoiceForm: React.FC = () => {
         />
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-background/95 backdrop-blur-md border-t border-border/60 z-30">
+      {/* Action Footer - Đứng cố định ở đáy theo luồng Flexbox, thay thế BottomNav */}
+      <footer className="shrink-0 w-full p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-background/95 backdrop-blur-md border-t border-border/60 z-20">
         <Button
           size="lg"
           className="w-full min-h-[48px] font-bold text-sm gap-2 shadow-md"
@@ -103,8 +105,8 @@ const CreateInvoiceForm: React.FC = () => {
           <Check className="size-5" />
           {isEditMode ? CREATE_TEXTS.SUBMIT_EDIT_BTN : CREATE_TEXTS.SUBMIT_BTN}
         </Button>
-      </div>
-    </>
+      </footer>
+    </div>
   );
 };
 
@@ -114,7 +116,9 @@ export const CreateInvoiceView: React.FC = () => {
       <Header />
       <Suspense
         fallback={
-          <div className="p-4 text-xs text-muted-foreground">Đang tải...</div>
+          <div className="flex-1 flex items-center justify-center p-4 text-xs text-muted-foreground">
+            Đang tải...
+          </div>
         }
       >
         <CreateInvoiceForm />
