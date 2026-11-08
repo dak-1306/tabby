@@ -1,13 +1,9 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { FormattedRecentInvoice } from "@/features/home/types";
-import { useAppStore } from "@/stores/useAppStore";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { InlineConfirmButton } from "@/components/common/InlineConfirmButton";
-import { formatInvoiceGroupShareText } from "@/lib/shareFormatters";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -21,12 +17,11 @@ import {
 import { Copy, CheckCircle2, Pencil } from "lucide-react";
 import {
   DRAWER_TEXTS,
-  TOAST_TEXTS,
   CURRENCY_SYMBOL,
   LOCALE_VI,
   INVOICE_STATUS,
-  ROUTES,
 } from "@/constants";
+import { useInvoiceDetailDrawer } from "@/hooks/useInvoiceDetailDrawer";
 
 interface InvoiceDetailDrawerProps {
   invoice: FormattedRecentInvoice | null;
@@ -37,37 +32,16 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
   invoice,
   onClose,
 }) => {
-  const router = useRouter();
   const {
-    invoices,
+    fullInvoice,
     members,
-    currentUserId,
-    markInvoiceCompleted,
-    deleteInvoice,
-  } = useAppStore();
+    handleCopySummary,
+    handleEdit,
+    handleDelete,
+    handleMarkCompleted,
+  } = useInvoiceDetailDrawer(invoice, onClose);
 
   if (!invoice) return null;
-
-  const fullInvoice = invoices.find((inv) => inv.id === invoice.id);
-  const currentUser = members.find((m) => m.id === currentUserId);
-
-  const handleCopySummary = () => {
-    if (!fullInvoice) return;
-    const text = formatInvoiceGroupShareText(fullInvoice, members, currentUser);
-    navigator.clipboard?.writeText(text);
-    toast.success(TOAST_TEXTS.COPY_BILL_SUCCESS);
-  };
-
-  const handleEdit = () => {
-    onClose();
-    router.push(`${ROUTES.CREATE}?edit=${invoice.id}`);
-  };
-
-  const handleDelete = () => {
-    deleteInvoice(invoice.id);
-    toast.success(TOAST_TEXTS.DELETE_INVOICE_SUCCESS);
-    onClose();
-  };
 
   return (
     <Drawer open={Boolean(invoice)} onOpenChange={(open) => !open && onClose()}>
@@ -146,11 +120,7 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
               variant="outline"
               size="lg"
               className="w-full gap-2 min-h-[44px]"
-              onClick={() => {
-                markInvoiceCompleted(invoice.id);
-                toast.success(TOAST_TEXTS.MARK_COMPLETED_SUCCESS);
-                onClose();
-              }}
+              onClick={handleMarkCompleted}
             >
               <CheckCircle2 className="size-4 text-primary" />
               {DRAWER_TEXTS.BTN_MARK_COMPLETED}
@@ -171,11 +141,11 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
                 variant="ghost"
                 className="w-full min-h-[44px]"
                 onClick={onClose}
-              />
+              >
+                {DRAWER_TEXTS.BTN_CLOSE}
+              </Button>
             }
-          >
-            {DRAWER_TEXTS.BTN_CLOSE}
-          </DrawerClose>
+          />
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

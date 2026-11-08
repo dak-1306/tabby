@@ -67,6 +67,15 @@ export const useAppStore = create<AppState>()(
       addMember: (member) =>
         set((state) => ({ members: [...state.members, member] })),
 
+      updateMember: (memberId, name) =>
+        set((state) => ({
+          members: state.members.map((m) =>
+            m.id === memberId
+              ? { ...m, name, avatar: name[0]?.toUpperCase() || m.avatar }
+              : m,
+          ),
+        })),
+
       deleteMember: (memberId) =>
         set((state) => ({
           members: state.members.filter((m) => m.id !== memberId),

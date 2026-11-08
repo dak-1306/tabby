@@ -22,9 +22,11 @@ const CreateInvoiceForm: React.FC = () => {
     breakdowns,
     handleToggleMember,
     handleAddNewMember,
+    handleUpdateMember,
     handleAddItem,
     handleRemoveItem,
     handleSubmit,
+    handleNextRow,
   } = useCreateInvoice();
 
   const {
@@ -62,6 +64,7 @@ const CreateInvoiceForm: React.FC = () => {
           selectedMemberIds={selectedMemberIds}
           onToggleMember={handleToggleMember}
           onAddNewMember={handleAddNewMember}
+          onUpdateMember={handleUpdateMember}
         />
 
         <div className="space-y-2.5">
@@ -75,12 +78,13 @@ const CreateInvoiceForm: React.FC = () => {
               form={form}
               members={selectedMembers}
               onRemove={() => handleRemoveItem(index)}
+              onNextRow={() => handleNextRow(index)}
             />
           ))}
           <button
             type="button"
             onClick={handleAddItem}
-            className="w-full py-2.5 border border-dashed border-primary/50 text-primary text-xs font-bold rounded-xl hover:bg-primary/10 min-h-[44px] flex items-center justify-center gap-1.5"
+            className="w-full py-3 border border-dashed border-primary/50 text-primary text-xs font-bold rounded-xl hover:bg-primary/10 min-h-[44px] flex items-center justify-center gap-1.5 transition-colors"
           >
             <Plus className="size-4" />
             {CREATE_TEXTS.ADD_ITEM_BTN}
@@ -95,7 +99,7 @@ const CreateInvoiceForm: React.FC = () => {
         />
       </main>
 
-      {/* Action Footer - Đứng cố định ở đáy theo luồng Flexbox, thay thế BottomNav */}
+      {/* Action Footer - Đứng cố định ở đáy theo luồng Flexbox */}
       <footer className="shrink-0 w-full p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-background/95 backdrop-blur-md border-t border-border/60 z-20">
         <Button
           size="lg"

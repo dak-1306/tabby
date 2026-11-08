@@ -1,15 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { toast } from "sonner";
+import React from "react";
 import { MemberDebtSummary } from "@/types";
-import { useAppStore } from "@/stores/useAppStore";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { InlineConfirmButton } from "@/components/common/InlineConfirmButton";
-import {
-  formatMemberDemandShareText,
-  DetailedUnpaidBill,
-} from "@/lib/shareFormatters";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -20,8 +14,17 @@ import {
   DrawerFooter,
   DrawerClose,
 } from "@/components/ui/drawer";
-import { Copy, CheckCircle2, ChevronDown, ChevronUp, FileText } from "lucide-react";
-import { DRAWER_TEXTS, TOAST_TEXTS, CURRENCY_SYMBOL, LOCALE_VI } from "@/constants";
+import {
+  Copy,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Edit2,
+  Check,
+} from "lucide-react";
+import { DRAWER_TEXTS, CURRENCY_SYMBOL, LOCALE_VI } from "@/constants";
+import { useMemberDetailDrawer } from "@/hooks/useMemberDetailDrawer";
 
 interface MemberDetailDrawerProps {
   member: MemberDebtSummary | null;
@@ -32,75 +35,21 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
   member,
   onClose,
 }) => {
-  const [expandedBillIds, setExpandedBillIds] = useState<string[]>([]);
-  const { invoices, currentUserId, members, clearMemberDebt, deleteMember } =
-    useAppStore();
+  const {
+    unpaidInvoicesWithDetails,
+    expandedBillIds,
+    isEditingName,
+    editName,
+    setEditName,
+    toggleExpand,
+    handleStartEdit,
+    handleSaveName,
+    handleCopyText,
+    handleClearDebt,
+    handleDeleteMember,
+  } = useMemberDetailDrawer(member, onClose);
 
   if (!member) return null;
-
-  const currentUser = members.find((m) => m.id === currentUserId);
-
-  const unpaidInvoicesWithDetails: DetailedUnpaidBill[] = invoices
-    .filter(
-      (inv) =>
-        inv.paidByMemberId === currentUserId &&
-        inv.items.some((item) => item.assignedMemberIds.includes(member.memberId))
-    )
-    .map((inv) => {
-      const memberItems = inv.items
-        .filter((item) => item.assignedMemberIds.includes(member.memberId))
-        .map((item) => ({
-          name: item.name,
-          totalPrice: item.price,
-          splitCount: item.assignedMemberIds.length,
-          memberShare: item.price / item.assignedMemberIds.length,
-        }));
-
-      const amountOwedForBill = memberItems.reduce(
-        (sum, item) => sum + item.memberShare,
-        0
-      );
-
-      return {
-        id: inv.id,
-        title: inv.title,
-        createdAt: inv.createdAt,
-        amountOwedForBill,
-        items: memberItems,
-      };
-    });
-
-  const toggleExpand = (billId: string) => {
-    setExpandedBillIds((prev) =>
-      prev.includes(billId)
-        ? prev.filter((id) => id !== billId)
-        : [...prev, billId]
-    );
-  };
-
-  const handleCopyText = (isDetailed: boolean) => {
-    const text = formatMemberDemandShareText(
-      member,
-      unpaidInvoicesWithDetails,
-      currentUser,
-      isDetailed
-    );
-    navigator.clipboard?.writeText(text);
-    toast.success(TOAST_TEXTS.COPY_DEMAND_SUCCESS);
-  };
-
-  const handleClearDebt = () => {
-    clearMemberDebt(member.memberId);
-    toast.success(TOAST_TEXTS.CLEAR_DEBT_SUCCESS);
-    onClose();
-  };
-
-  const handleDeleteMember = () => {
-    deleteMember(member.memberId);
-    toast.success(TOAST_TEXTS.DELETE_MEMBER_SUCCESS);
-    onClose();
-  };
-
   const hasDebt = member.totalOwed > 0;
 
   return (
@@ -109,12 +58,50 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
         <DrawerHeader>
           <div className="flex items-center gap-3">
             <MemberAvatar
-              name={member.memberName}
+              name={
+                isEditingName
+                  ? editName || member.memberName
+                  : member.memberName
+              }
               fallbackText={member.memberAvatar}
               size="lg"
             />
-            <div className="text-left">
-              <DrawerTitle className="text-base font-bold">{member.memberName}</DrawerTitle>
+            <div className="text-left flex-1 min-w-0">
+              {isEditingName ? (
+                <div className="flex items-center gap-1.5 my-0.5">
+                  <input
+                    type="text"
+                    autoFocus
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSaveName()}
+                    className="text-sm font-bold bg-muted/60 border border-primary/50 rounded-lg px-2 py-1 text-foreground focus:outline-none w-full"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveName}
+                    className="p-1.5 bg-primary text-primary-foreground rounded-lg font-bold shrink-0 hover:opacity-90 min-h-[36px] min-w-[36px] flex items-center justify-center"
+                    aria-label="Lưu tên"
+                  >
+                    <Check className="size-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <DrawerTitle className="text-base font-bold truncate">
+                    {member.memberName}
+                  </DrawerTitle>
+                  <button
+                    type="button"
+                    onClick={handleStartEdit}
+                    className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md min-h-[32px] min-w-[32px] flex items-center justify-center"
+                    aria-label="Đổi tên thành viên"
+                  >
+                    <Edit2 className="size-3.5" />
+                  </button>
+                </div>
+              )}
+
               <DrawerDescription className="text-xs text-muted-foreground mt-0.5">
                 {DRAWER_TEXTS.TOTAL_OWED_LABEL}{" "}
                 <span className="font-bold text-primary">
@@ -144,7 +131,9 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                     className="w-full p-3 flex items-center justify-between text-left hover:bg-muted/30 transition-colors min-h-[44px]"
                   >
                     <div>
-                      <p className="font-semibold text-foreground">{inv.title}</p>
+                      <p className="font-semibold text-foreground">
+                        {inv.title}
+                      </p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
                         {new Date(inv.createdAt).toLocaleDateString(LOCALE_VI)}
                       </p>
@@ -152,7 +141,7 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
 
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-primary text-xs">
-                        {Math.round(inv.amountOwedForBill).toLocaleString(LOCALE_VI)}{" "}
+                        {inv.amountOwedForBill.toLocaleString(LOCALE_VI)}{" "}
                         {CURRENCY_SYMBOL}
                       </span>
                       {isExpanded ? (
@@ -163,7 +152,6 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                     </div>
                   </button>
 
-                  {/* Chi tiết từng món khi bấm mở rộng */}
                   {isExpanded && (
                     <div className="px-3 pb-3 pt-1 border-t border-border/40 bg-muted/20 space-y-1.5">
                       {inv.items.map((item, idx) => (
@@ -175,11 +163,12 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
                             • {item.name}
                           </span>
                           <span className="shrink-0 font-medium">
-                            {item.totalPrice.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}{" "}
+                            {item.totalPrice.toLocaleString(LOCALE_VI)}{" "}
+                            {CURRENCY_SYMBOL}{" "}
                             <span className="text-[10px] text-muted-foreground/80">
                               (chia {item.splitCount} →{" "}
                               <strong className="text-foreground">
-                                {Math.round(item.memberShare).toLocaleString(LOCALE_VI)}{" "}
+                                {item.memberShare.toLocaleString(LOCALE_VI)}{" "}
                                 {CURRENCY_SYMBOL}
                               </strong>
                               )
@@ -244,9 +233,17 @@ export const MemberDetailDrawer: React.FC<MemberDetailDrawerProps> = ({
             variant="destructive"
           />
 
-          <DrawerClose render={<Button variant="ghost" className="w-full min-h-[44px]" onClick={onClose} />}>
-            {DRAWER_TEXTS.BTN_CLOSE}
-          </DrawerClose>
+          <DrawerClose
+            render={
+              <Button
+                variant="ghost"
+                className="w-full min-h-[44px]"
+                onClick={onClose}
+              >
+                {DRAWER_TEXTS.BTN_CLOSE}
+              </Button>
+            }
+          />
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

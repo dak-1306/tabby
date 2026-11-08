@@ -42,6 +42,7 @@ export interface AppState {
   markInvoiceCompleted: (invoiceId: string) => void;
   clearMemberDebt: (memberId: string) => void;
   addMember: (member: Member) => void;
+  updateMember: (memberId: string, name: string) => void;
   deleteMember: (memberId: string) => void;
   updateCurrentUserProfile: (profileData: Partial<Member>) => void;
   importData: (newState: Partial<AppState>) => void;

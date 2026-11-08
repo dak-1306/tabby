@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useAppStore } from "@/stores/useAppStore";
+import { calculateItemShare } from "@/lib/calculations";
 import {
   LedgerFilterTab,
   LedgerMemberSummary,
@@ -20,7 +21,10 @@ export const useLedgerFilter = () => {
 
       inv.items.forEach((item) => {
         if (item.assignedMemberIds.length === 0) return;
-        const share = item.price / item.assignedMemberIds.length;
+        const share = calculateItemShare(
+          item.price,
+          item.assignedMemberIds.length,
+        );
 
         item.assignedMemberIds.forEach((mId) => {
           if (

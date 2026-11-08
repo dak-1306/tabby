@@ -3,6 +3,7 @@ import { useAppStore } from "@/stores/useAppStore";
 import { HomeSummaryData, FormattedRecentInvoice } from "../types";
 import { MemberDebtSummary } from "@/types";
 import { INVOICE_STATUS, LOCALE_VI } from "@/constants";
+import { calculateItemShare } from "@/lib/calculations";
 
 export const useHomeSummary = (): HomeSummaryData => {
   const { invoices, members, currentUserId } = useAppStore();
@@ -20,7 +21,11 @@ export const useHomeSummary = (): HomeSummaryData => {
         totalAmount += item.price;
         if (item.assignedMemberIds.length === 0) return;
 
-        const sharePerPerson = item.price / item.assignedMemberIds.length;
+        // Dùng hàm làm tròn chuẩn 1.000đ cho phần chia mỗi người
+        const sharePerPerson = calculateItemShare(
+          item.price,
+          item.assignedMemberIds.length,
+        );
 
         if (inv.paidByMemberId === currentUserId) {
           item.assignedMemberIds.forEach((mId) => {

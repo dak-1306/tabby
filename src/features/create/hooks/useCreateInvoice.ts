@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useAppStore } from "@/stores/useAppStore";
 import { invoiceSchema, InvoiceFormData } from "@/lib/validations";
-import { calculateMemberSplits } from "../utils/splitCalculator";
+import { calculateMemberSplits } from "@/lib/calculations";
 import { ROUTES, TOAST_TEXTS } from "@/constants";
 
 export const useCreateInvoice = () => {
@@ -20,6 +20,7 @@ export const useCreateInvoice = () => {
     addInvoice,
     updateInvoice,
     addMember,
+    updateMember,
   } = useAppStore();
 
   const existingInvoice = useMemo(
@@ -127,11 +128,13 @@ export const useCreateInvoice = () => {
   };
 
   const handleAddItem = () => {
+    const activeMemberIds = form.getValues("selectedMemberIds");
     append({
       id: `item_${Date.now()}`,
       name: "",
       price: 0,
-      assignedMemberIds: [...selectedMemberIds],
+      assignedMemberIds:
+        activeMemberIds.length > 0 ? [...activeMemberIds] : [currentUserId],
     });
   };
 
@@ -157,6 +160,28 @@ export const useCreateInvoice = () => {
     router.push(ROUTES.HOME);
   });
 
+  const handleNextRow = (currentIndex: number) => {
+    const currentItems = form.getValues("items");
+    const nextIndex = currentIndex + 1;
+
+    if (nextIndex < currentItems.length) {
+      const nextInput = document.getElementById(`item-name-input-${nextIndex}`);
+      if (nextInput) {
+        nextInput.focus();
+        return;
+      }
+    }
+
+    handleAddItem();
+
+    setTimeout(() => {
+      const nextInput = document.getElementById(`item-name-input-${nextIndex}`);
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }, 50);
+  };
+
   return {
     form,
     isEditMode,
@@ -167,7 +192,9 @@ export const useCreateInvoice = () => {
     breakdowns,
     handleToggleMember,
     handleAddNewMember,
+    handleUpdateMember: updateMember,
     handleAddItem,
+    handleNextRow,
     handleRemoveItem: remove,
     handleUpdateItem: update,
     handleSubmit,
