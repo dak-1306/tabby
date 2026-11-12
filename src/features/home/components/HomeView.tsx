@@ -9,6 +9,7 @@ import { DebtMemberList } from "./DebtMemberList";
 import { RecentInvoiceList } from "./RecentInvoiceList";
 import { MemberDetailDrawer } from "@/components/common/MemberDetailDrawer";
 import { InvoiceDetailDrawer } from "@/components/common/InvoiceDetailDrawer";
+import { OnboardingModal } from "@/components/common/OnboardingModal";
 import { MemberDebtSummary } from "@/types";
 import { FormattedRecentInvoice } from "../types";
 
@@ -21,6 +22,9 @@ export const HomeView: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full w-full bg-background text-foreground relative overflow-hidden">
+      {/* Trigger Modal lần đầu mở app */}
+      <OnboardingModal />
+
       <Header />
 
       <main className="flex-1 overflow-y-auto px-4 py-4 scrollbar-none flex flex-col gap-5">
@@ -41,7 +45,6 @@ export const HomeView: React.FC = () => {
         />
       </main>
 
-      {/* Shared Common Drawers */}
       <MemberDetailDrawer
         member={selectedMember}
         onClose={() => setSelectedMember(null)}

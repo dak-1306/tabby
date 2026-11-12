@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { useProfileSettings } from "../hooks/useProfileSettings";
 import { UserProfileSection } from "./UserProfileSection";
 import { ThemeSection } from "./ThemeSection";
+import { AppGuideSection } from "./AppGuideSection";
 import { DataBackupSection } from "./DataBackupSection";
 import { DangerZoneSection } from "./DangerZoneSection";
 import { PROFILE_TEXTS } from "../constants";
@@ -37,6 +38,9 @@ export const ProfileView: React.FC = () => {
         />
 
         <ThemeSection />
+
+        {/* Nút Xem lại hướng dẫn tự động */}
+        <AppGuideSection />
 
         <DataBackupSection
           storageStats={storageStats}

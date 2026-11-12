@@ -4,6 +4,8 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { ClientShell } from "@/components/common/ClientShell";
 import "./globals.css";
+import { DemoProvider } from "@/contexts/DemoContext";
+import { DemoOverlay } from "@/components/common/DemoOverlay";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -58,7 +60,11 @@ export default function RootLayout({
           <ClientShell>
             {/* Khung chứa app cố định chiều cao bằng 100dvh, tràn nền tự nhiên */}
             <div className="mx-auto max-w-md h-[100dvh] flex flex-col bg-background relative shadow-2xl overflow-hidden">
-              {children}
+              <DemoProvider>
+                {/* Overlay và Banner Top đứng cố định toàn app */}
+                <DemoOverlay />
+                {children}
+              </DemoProvider>
             </div>
           </ClientShell>
           <Toaster position="top-center" richColors closeButton />
