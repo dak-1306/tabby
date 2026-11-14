@@ -1,6 +1,6 @@
 import { Invoice, Member, MemberDebtSummary } from "@/types";
 import { CURRENCY_SYMBOL, LOCALE_VI } from "@/constants";
-import { roundToThousand } from "@/lib/calculations";
+import { roundToThousand } from "@/utils/calculations";
 
 export interface DetailedUnpaidItem {
   name: string;
@@ -21,7 +21,7 @@ export interface DetailedUnpaidBill {
 export const formatInvoiceGroupShareText = (
   invoice: Invoice,
   members: Member[],
-  currentUser?: Member
+  currentUser?: Member,
 ): string => {
   const totalAmount = invoice.items.reduce((sum, item) => sum + item.price, 0);
   const dateStr = new Date(invoice.createdAt).toLocaleDateString(LOCALE_VI);
@@ -40,7 +40,9 @@ export const formatInvoiceGroupShareText = (
       const names = item.assignedMemberIds
         .map((mId) => members.find((m) => m.id === mId)?.name || "Thành viên")
         .join(", ");
-      const sharePrice = roundToThousand(item.price / item.assignedMemberIds.length);
+      const sharePrice = roundToThousand(
+        item.price / item.assignedMemberIds.length,
+      );
       return `- ${item.name}: ${item.price.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL} (chia ${item.assignedMemberIds.length} -> ${sharePrice.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}/người: ${names})`;
     })
     .join("\n");
@@ -64,7 +66,7 @@ export const formatMemberDemandShareText = (
   member: MemberDebtSummary,
   unpaidBills: DetailedUnpaidBill[],
   currentUser?: Member,
-  isDetailed = true
+  isDetailed = true,
 ): string => {
   const bankInfoText = currentUser?.accountNumber
     ? `\n\nThông tin chuyển khoản:\n- STK: ${currentUser.accountNumber}\n- Ngân hàng: ${currentUser.bankName || "Chưa cập nhật"}\n- Chủ TK: ${currentUser.name}`
@@ -74,7 +76,7 @@ export const formatMemberDemandShareText = (
     const summaryList = unpaidBills
       .map(
         (b) =>
-          `- ${b.title} (${new Date(b.createdAt).toLocaleDateString(LOCALE_VI)}): ${b.amountOwedForBill.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}`
+          `- ${b.title} (${new Date(b.createdAt).toLocaleDateString(LOCALE_VI)}): ${b.amountOwedForBill.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}`,
       )
       .join("\n");
 
@@ -87,7 +89,7 @@ export const formatMemberDemandShareText = (
       const itemsText = b.items
         .map(
           (item) =>
-            `  + ${item.name}: ${item.totalPrice.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL} (chia ${item.splitCount} -> ${item.memberShare.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL})`
+            `  + ${item.name}: ${item.totalPrice.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL} (chia ${item.splitCount} -> ${item.memberShare.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL})`,
         )
         .join("\n");
 
@@ -102,7 +104,7 @@ export const formatMemberDemandShareText = (
 export const formatHostExpenseShareText = (
   hostName: string,
   hostUnpaidBills: DetailedUnpaidBill[],
-  totalHostExpense: number
+  totalHostExpense: number,
 ): string => {
   const detailedList = hostUnpaidBills
     .map((b) => {
@@ -110,7 +112,7 @@ export const formatHostExpenseShareText = (
       const itemsText = b.items
         .map(
           (item) =>
-            `  + ${item.name}: ${item.totalPrice.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL} (chia ${item.splitCount} -> ${item.memberShare.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL})`
+            `  + ${item.name}: ${item.totalPrice.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL} (chia ${item.splitCount} -> ${item.memberShare.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL})`,
         )
         .join("\n");
 

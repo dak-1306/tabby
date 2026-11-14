@@ -5,7 +5,7 @@ import { Member } from "@/types";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { CREATE_TEXTS } from "../constants";
 import { Plus, Check, Edit2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 interface MemberSelectorProps {
   allMembers: Member[];

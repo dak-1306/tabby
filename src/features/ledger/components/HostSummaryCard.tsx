@@ -6,7 +6,7 @@ import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { useAppStore } from "@/stores/useAppStore";
 import { ChevronRight, Receipt } from "lucide-react";
 import { CURRENCY_SYMBOL, LOCALE_VI } from "@/constants";
-import { calculateHostTotalExpense } from "@/lib/calculations";
+import { calculateHostTotalExpense } from "@/utils/calculations";
 
 interface HostSummaryCardProps {
   onClick: () => void;

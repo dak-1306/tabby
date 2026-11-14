@@ -2,7 +2,7 @@
 
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { ProfileFormData } from "@/lib/validations";
+import { ProfileFormData } from "@/validations";
 import { PROFILE_TEXTS } from "../constants";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

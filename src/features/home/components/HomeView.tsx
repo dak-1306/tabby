@@ -12,6 +12,7 @@ import { InvoiceDetailDrawer } from "@/components/common/InvoiceDetailDrawer";
 import { OnboardingModal } from "@/components/common/OnboardingModal";
 import { MemberDebtSummary } from "@/types";
 import { FormattedRecentInvoice } from "../types";
+import { HomeGroupSection } from "@/features/groups/components/HomeGroupSection";
 
 export const HomeView: React.FC = () => {
   const summary = useHomeSummary();
@@ -33,6 +34,8 @@ export const HomeView: React.FC = () => {
           unpaidMembersCount={summary.unpaidMembersCount}
           unpaidInvoicesCount={summary.unpaidInvoicesCount}
         />
+
+        <HomeGroupSection />
 
         <DebtMemberList
           debtMembers={summary.debtMembers}

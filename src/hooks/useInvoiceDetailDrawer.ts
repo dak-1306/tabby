@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FormattedRecentInvoice } from "@/features/home/types";
 import { useAppStore } from "@/stores/useAppStore";
-import { formatInvoiceGroupShareText } from "@/lib/shareFormatters";
+import { formatInvoiceGroupShareText } from "@/utils/shareFormatters";
 import { TOAST_TEXTS, ROUTES } from "@/constants";
 
 export const useInvoiceDetailDrawer = (

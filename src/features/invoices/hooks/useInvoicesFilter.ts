@@ -3,7 +3,7 @@ import { useAppStore } from "@/stores/useAppStore";
 import { InvoiceFilterTab, InvoicesStatsData } from "../types";
 import { FormattedRecentInvoice } from "@/features/home/types";
 import { INVOICE_STATUS, LOCALE_VI } from "@/constants";
-import { calculateItemShare } from "@/lib/calculations";
+import { calculateItemShare } from "@/utils/calculations";
 
 export const useInvoicesFilter = () => {
   const { invoices, currentUserId } = useAppStore();
@@ -22,7 +22,7 @@ export const useInvoicesFilter = () => {
         // Dùng hàm làm tròn chuẩn 1.000đ cho phần chia mỗi người
         const share = calculateItemShare(
           item.price,
-          item.assignedMemberIds.length
+          item.assignedMemberIds.length,
         );
 
         if (inv.paidByMemberId === currentUserId) {

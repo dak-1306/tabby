@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useAppStore } from "@/stores/useAppStore";
-import { calculateItemShare } from "@/lib/calculations";
+import { calculateItemShare } from "@/utils/calculations";
 import {
   formatHostExpenseShareText,
   DetailedUnpaidBill,
-} from "@/lib/shareFormatters";
+} from "@/utils/shareFormatters";
 
 export const useHostDetailDrawer = () => {
   const [expandedBillIds, setExpandedBillIds] = useState<string[]>([]);

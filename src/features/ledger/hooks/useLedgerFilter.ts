@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useAppStore } from "@/stores/useAppStore";
-import { calculateItemShare } from "@/lib/calculations";
+import { calculateItemShare } from "@/utils/calculations";
 import {
   LedgerFilterTab,
   LedgerMemberSummary,

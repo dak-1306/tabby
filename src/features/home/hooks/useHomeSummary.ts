@@ -3,7 +3,7 @@ import { useAppStore } from "@/stores/useAppStore";
 import { HomeSummaryData, FormattedRecentInvoice } from "../types";
 import { MemberDebtSummary } from "@/types";
 import { INVOICE_STATUS, LOCALE_VI } from "@/constants";
-import { calculateItemShare } from "@/lib/calculations";
+import { calculateItemShare } from "@/utils/calculations";
 
 export const useHomeSummary = (): HomeSummaryData => {
   const { invoices, members, currentUserId } = useAppStore();

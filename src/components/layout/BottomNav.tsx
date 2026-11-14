@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Receipt, Plus, Users } from "lucide-react";
 import { ROUTES } from "@/constants";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 export const BottomNav: React.FC = () => {
   const pathname = usePathname();

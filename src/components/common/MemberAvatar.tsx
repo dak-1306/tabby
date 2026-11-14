@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 interface MemberAvatarProps {
   name: string;
@@ -53,7 +53,7 @@ export const MemberAvatar: React.FC<MemberAvatarProps> = ({
         "rounded-full border font-bold flex items-center justify-center shrink-0 select-none",
         sizeClasses[size],
         colorClass,
-        className
+        className,
       )}
     >
       {displayChar}

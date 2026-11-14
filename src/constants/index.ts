@@ -87,3 +87,50 @@ export const TOAST_TEXTS = {
   DELETE_INVOICE_SUCCESS: "Đã xóa hóa đơn thành công!",
   DELETE_MEMBER_SUCCESS: "Đã xóa thành viên thành công!",
 } as const;
+
+export const GROUP_STORAGE_KEY = "splito_tabby_groups_v1";
+export const GROUP_SESSION_KEY = "splito_tabby_group_sessions_v1";
+
+export const GROUP_ROUTES = {
+  DETAIL: (groupId: string) => `/g/${groupId}`,
+  CREATE_BILL: (groupId: string, editBillId?: string) =>
+    editBillId
+      ? `/g/${groupId}/create?edit=${editBillId}`
+      : `/g/${groupId}/create`,
+} as const;
+
+export const GROUP_TEXTS = {
+  SECTION_TITLE: "Chia tiền nhóm (Đồng bộ Link)",
+  BTN_CREATE_GROUP: "Tạo nhóm mới",
+  BTN_JOIN_CODE: "Vào bằng mã",
+  EMPTY_GROUPS: "Chưa có nhóm nào. Tạo nhóm để gửi link chia tiền qua Zalo!",
+  CREATE_DRAWER_TITLE: "Tạo nhóm chia tiền mới",
+  CREATE_DRAWER_DESC:
+    "Thêm tên các thành viên để tạo link mời qua Zalo/Messenger.",
+  GROUP_NAME_LABEL: "Tên nhóm / Chuyến đi",
+  GROUP_NAME_PLACEHOLDER: "Ví dụ: Đà Lạt 2026, Ăn trưa team...",
+  YOUR_NAME_LABEL: "Tên của bạn (Người tạo)",
+  YOUR_NAME_PLACEHOLDER: "Nhập tên của bạn...",
+  OTHER_MEMBERS_LABEL: "Thành viên khác trong nhóm",
+  OTHER_MEMBER_PLACEHOLDER: "Nhập tên thành viên...",
+  JOIN_CODE_TITLE: "Vào nhóm bằng mã",
+  JOIN_CODE_DESC: "Nhập mã nhóm gồm 6 ký tự được chia sẻ từ bạn bè.",
+  IDENTITY_TITLE: "Bạn là ai trong nhóm này?",
+  IDENTITY_DESC:
+    "Chọn tên của bạn để hệ thống tự tính phần chi tiêu và công nợ.",
+  INVITE_TITLE: "Mời thành viên vào nhóm",
+  INVITE_DESC: "Gửi link riêng từng người để app tự nhận diện tên khi mở.",
+} as const;
+
+export const GROUP_DETAIL_TEXTS = {
+  TAB_MY_BALANCE: "Của tôi",
+  TAB_ALL_DEBTS: "Cả nhóm",
+  PAYER_LABEL: "Người thanh toán (Trả tiền bill này)",
+  BTN_ADD_BILL: "Thêm bill nhóm",
+  BTN_SETTLE_PAIR: "Chốt nợ (Đã thanh toán)",
+  SETTLE_CONFIRM_TITLE: "Xác nhận đã thanh toán khoản này?",
+  SETTLE_CONFIRM_DESC:
+    "Hệ thống sẽ ghi nhận giao dịch chốt nợ và đưa số dư giữa 2 người về 0 đ.",
+  SETTLE_SUCCESS: "Đã chốt nợ thành công!",
+  COPY_PAIR_SUCCESS: "Đã sao chép chi tiết đối soát gửi Zalo!",
+} as const;

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAppStore } from "@/stores/useAppStore";
-import { profileSchema, ProfileFormData } from "@/lib/validations";
+import { profileSchema, ProfileFormData } from "@/validations";
 import { StorageStats } from "../types";
 import { STORAGE_KEY } from "@/constants";
 

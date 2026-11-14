@@ -2,11 +2,11 @@ import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { MemberDebtSummary } from "@/types";
 import { useAppStore } from "@/stores/useAppStore";
-import { calculateItemShare } from "@/lib/calculations";
+import { calculateItemShare } from "@/utils/calculations";
 import {
   formatMemberDemandShareText,
   DetailedUnpaidBill,
-} from "@/lib/shareFormatters";
+} from "@/utils/shareFormatters";
 import { TOAST_TEXTS } from "@/constants";
 
 export const useMemberDetailDrawer = (

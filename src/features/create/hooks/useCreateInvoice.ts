@@ -4,8 +4,8 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useAppStore } from "@/stores/useAppStore";
-import { invoiceSchema, InvoiceFormData } from "@/lib/validations";
-import { calculateMemberSplits } from "@/lib/calculations";
+import { invoiceSchema, InvoiceFormData } from "@/validations";
+import { calculateMemberSplits } from "@/utils/calculations";
 import { ROUTES, TOAST_TEXTS } from "@/constants";
 
 export const useCreateInvoice = () => {

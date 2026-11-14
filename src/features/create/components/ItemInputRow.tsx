@@ -2,7 +2,7 @@
 
 import React, { useRef } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { InvoiceFormData } from "@/lib/validations";
+import { InvoiceFormData } from "@/validations";
 import { Member } from "@/types";
 import { Input } from "@/components/ui/input";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
