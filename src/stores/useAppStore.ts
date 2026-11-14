@@ -7,6 +7,11 @@ const initialMembers: Member[] = [
   { id: "m1", name: "Bạn (Host)", avatar: "H" },
 ];
 
+const DEFAULT_HOST_NAMES = ["bạn (host)", "tôi", "bạn", "host"];
+
+const isDefaultHostName = (name?: string): boolean =>
+  !name || DEFAULT_HOST_NAMES.includes(name.trim().toLowerCase());
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
@@ -87,6 +92,69 @@ export const useAppStore = create<AppState>()(
             m.id === state.currentUserId ? { ...m, ...profileData } : m,
           ),
         })),
+
+      migrateCurrentUserId: (newUserId, profile) =>
+        set((state) => {
+          const oldUserId = state.currentUserId;
+
+          // Nếu đã mang ID Google -> Chỉ cập nhật tên/avatar nếu đang là tên mặc định
+          if (oldUserId === newUserId) {
+            if (!profile?.name) return state;
+            return {
+              members: state.members.map((m) =>
+                m.id === newUserId && isDefaultHostName(m.name)
+                  ? {
+                      ...m,
+                      name: profile.name!,
+                      avatar:
+                        profile.avatar ||
+                        profile.name!.charAt(0).toUpperCase(),
+                    }
+                  : m,
+              ),
+            };
+          }
+
+          // Chuyển toàn bộ tham chiếu từ oldUserId ("m1") sang Google User ID
+          const hasTargetMember = state.members.some((m) => m.id === newUserId);
+          const updatedMembers = hasTargetMember
+            ? state.members.filter((m) => m.id !== oldUserId)
+            : state.members.map((m) => {
+                if (m.id !== oldUserId) return m;
+                const nextName =
+                  isDefaultHostName(m.name) && profile?.name
+                    ? profile.name
+                    : m.name;
+                return {
+                  ...m,
+                  id: newUserId,
+                  name: nextName,
+                  avatar: nextName.charAt(0).toUpperCase() || m.avatar,
+                };
+              });
+
+          const updatedInvoices = state.invoices.map((inv) => ({
+            ...inv,
+            paidByMemberId:
+              inv.paidByMemberId === oldUserId ? newUserId : inv.paidByMemberId,
+            items: inv.items.map((item) => ({
+              ...item,
+              assignedMemberIds: Array.from(
+                new Set(
+                  item.assignedMemberIds.map((id) =>
+                    id === oldUserId ? newUserId : id,
+                  ),
+                ),
+              ),
+            })),
+          }));
+
+          return {
+            currentUserId: newUserId,
+            members: updatedMembers,
+            invoices: updatedInvoices,
+          };
+        }),
 
       importData: (newState) =>
         set(() => ({

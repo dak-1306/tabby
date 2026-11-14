@@ -20,13 +20,19 @@ export const useProfileSettings = () => {
     [members, currentUserId],
   );
 
-  const form = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
+  const formValues = useMemo<ProfileFormData>(
+    () => ({
       name: currentUser?.name || "",
       bankName: currentUser?.bankName || "",
       accountNumber: currentUser?.accountNumber || "",
-    },
+    }),
+    [currentUser?.name, currentUser?.bankName, currentUser?.accountNumber],
+  );
+
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: formValues,
+    values: formValues,
   });
 
   const [isSaved, setIsSaved] = useState(false);

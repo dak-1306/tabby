@@ -6,6 +6,7 @@ import { ClientShell } from "@/components/common/ClientShell";
 import "./globals.css";
 import { DemoProvider } from "@/contexts/DemoContext";
 import { DemoOverlay } from "@/components/common/DemoOverlay";
+import { CloudSyncProvider } from "@/components/providers/CloudSyncProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -60,11 +61,13 @@ export default function RootLayout({
           <ClientShell>
             {/* Khung chứa app cố định chiều cao bằng 100dvh, tràn nền tự nhiên */}
             <div className="mx-auto max-w-md h-[100dvh] flex flex-col bg-background relative shadow-2xl overflow-hidden">
+              <CloudSyncProvider>
               <DemoProvider>
                 {/* Overlay và Banner Top đứng cố định toàn app */}
                 <DemoOverlay />
                 {children}
               </DemoProvider>
+              </CloudSyncProvider>
             </div>
           </ClientShell>
           <Toaster position="top-center" richColors closeButton />

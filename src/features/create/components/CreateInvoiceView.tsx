@@ -14,6 +14,8 @@ import { CREATE_TEXTS } from "../constants";
 const CreateInvoiceForm: React.FC = () => {
   const {
     form,
+    title,
+    items,
     isEditMode,
     fields,
     allMembers,
@@ -31,12 +33,8 @@ const CreateInvoiceForm: React.FC = () => {
 
   const {
     register,
-    watch,
     formState: { errors },
   } = form;
-
-  const title = watch("title");
-  const items = watch("items");
 
   return (
     <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden">
@@ -93,7 +91,7 @@ const CreateInvoiceForm: React.FC = () => {
 
         <LiveReceiptPreview
           title={title}
-          items={items || []}
+          items={items}
           selectedMembers={selectedMembers}
           breakdowns={breakdowns}
         />

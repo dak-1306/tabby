@@ -40,11 +40,21 @@ export const OnboardingModal: React.FC = () => {
 
         <div className="space-y-1.5">
           <h3 className="text-base font-bold text-foreground">
-            Chào mừng bạn đến với Tabby! 👋
+            Chào mừng bạn đến với Tabby!
           </h3>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Xem trải nghiệm tự động từ **Tạo bill siêu tốc** đến **Xem phần làm
-            tròn tiền** trong 25 giây.
+            Tabby là một ứng dụng quản lý công nợ, giúp bạn theo dõi các khoản
+            nợ và hóa đơn một cách dễ dàng. Bạn có thể bắt đầu bằng cách xem
+            demo tự động hoặc bỏ qua và tự trải nghiệm.
+          </p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Nếu bạn muốn đồng bộ dữ liệu với tài khoản Google của mình, hãy đăng
+            nhập để lưu trữ dữ liệu trên đám mây.
+          </p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Bạn cần lưu ý rằng nếu bạn không đăng nhập thì cần sử dụng app trên
+            cùng 1 trình duyệt để dữ liệu được lưu trữ cục bộ. Nếu bạn xóa cache
+            trình duyệt hoặc sử dụng trình duyệt khác, dữ liệu sẽ bị mất.
           </p>
         </div>
 
@@ -55,7 +65,7 @@ export const OnboardingModal: React.FC = () => {
             className="w-full font-bold text-xs gap-2 min-h-[44px]"
           >
             <Play className="size-4 fill-current" />
-            Xem Demo tự động (25s)
+            Xem hướng dẫn
           </Button>
 
           <Button

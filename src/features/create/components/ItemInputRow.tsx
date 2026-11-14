@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef } from "react";
-import { UseFormReturn } from "react-hook-form";
+import React, { useRef, useState } from "react";
+import { UseFormReturn, useWatch } from "react-hook-form";
 import { InvoiceFormData } from "@/validations";
 import { Member } from "@/types";
 import { Input } from "@/components/ui/input";
@@ -28,53 +28,84 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
   onNextRow,
 }) => {
   const priceInputRef = useRef<HTMLInputElement>(null);
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  const [draftPriceText, setDraftPriceText] = useState("");
 
   const {
     register,
-    watch,
+    control,
     setValue,
     formState: { errors },
   } = form;
 
-  const currentItem = watch(`items.${index}`);
+  const currentItem = useWatch({ control, name: `items.${index}` });
   const assignedIds = currentItem?.assignedMemberIds || [];
-  const currentPrice = currentItem?.price || 0;
-  const displayPrice = currentPrice === 0 ? "" : currentPrice;
+  const currentPrice = Number(currentItem?.price) || 0;
+
+  const displayedPriceValue = isEditingPrice
+    ? draftPriceText
+    : currentPrice === 0
+      ? ""
+      : String(currentPrice);
 
   const toggleMemberForArray = (mId: string) => {
     const updated = assignedIds.includes(mId)
       ? assignedIds.filter((id) => id !== mId)
       : [...assignedIds, mId];
-    setValue(`items.${index}.assignedMemberIds`, updated);
+    setValue(`items.${index}.assignedMemberIds`, updated, {
+      shouldDirty: true,
+    });
   };
 
   const handleToggleSelectAll = () => {
     if (assignedIds.length === members.length) {
-      setValue(`items.${index}.assignedMemberIds`, []);
+      setValue(`items.${index}.assignedMemberIds`, [], { shouldDirty: true });
     } else {
       setValue(
         `items.${index}.assignedMemberIds`,
         members.map((m) => m.id),
+        { shouldDirty: true },
       );
     }
   };
 
-  const applySmartPrice = (valStr: string) => {
-    const parsed = parseSmartPrice(valStr);
-    setValue(`items.${index}.price`, parsed, { shouldValidate: true });
+  const handlePriceChange = (rawText: string) => {
+    setDraftPriceText(rawText);
+    const parsed = parseSmartPrice(rawText);
+    setValue(`items.${index}.price`, parsed, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
+  const commitPriceOnBlur = (rawText: string) => {
+    const parsed = parseSmartPrice(rawText);
+    setValue(`items.${index}.price`, parsed, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setIsEditingPrice(false);
   };
 
   const addQuickPrice = (amount: number) => {
-    const nextPrice = (Number(currentPrice) || 0) + amount;
-    setValue(`items.${index}.price`, nextPrice, { shouldValidate: true });
+    const nextPrice = currentPrice + amount;
+    setIsEditingPrice(false);
+    setValue(`items.${index}.price`, nextPrice, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   };
 
   const setQuickDish = (dishName: string) => {
-    setValue(`items.${index}.name`, dishName, { shouldValidate: true });
+    setValue(`items.${index}.name`, dishName, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
     priceInputRef.current?.focus();
   };
 
   const itemError = errors.items?.[index];
+  const priceFieldRegistration = register(`items.${index}.price`);
 
   return (
     <div className="p-3.5 bg-card border border-border/70 rounded-2xl space-y-3 shadow-xs">
@@ -98,12 +129,19 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
             type="text"
             inputMode="decimal"
             placeholder="Giá (10k...)"
-            defaultValue={displayPrice}
-            key={`price_input_${index}_${currentPrice}`}
-            onFocus={(e) => e.target.select()}
-            onBlur={(e) => applySmartPrice(e.target.value)}
+            name={priceFieldRegistration.name}
+            value={displayedPriceValue}
+            onFocus={(e) => {
+              setDraftPriceText(currentPrice === 0 ? "" : String(currentPrice));
+              setIsEditingPrice(true);
+              e.target.select();
+            }}
+            onChange={(e) => handlePriceChange(e.target.value)}
+            onBlur={(e) => {
+              commitPriceOnBlur(e.target.value);
+            }}
             ref={(e) => {
-              register(`items.${index}.price`).ref(e);
+              priceFieldRegistration.ref(e);
               priceInputRef.current = e;
             }}
             className="text-right font-bold pr-3"
@@ -111,7 +149,7 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                applySmartPrice(e.currentTarget.value);
+                commitPriceOnBlur(e.currentTarget.value);
                 onNextRow?.();
               }
             }}

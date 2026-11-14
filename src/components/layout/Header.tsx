@@ -16,13 +16,25 @@ export const Header: React.FC = () => {
   const hasBackButton =
     pathname === ROUTES.CREATE || pathname === ROUTES.PROFILE;
 
+  const handleBack = () => {
+    if (pathname === ROUTES.PROFILE) {
+      router.push(ROUTES.HOME);
+      return;
+    }
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(ROUTES.HOME);
+    }
+  };
+
   return (
     <header className="shrink-0 w-full bg-background/95 backdrop-blur-md border-b border-border/60 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] flex items-center justify-between z-20">
       <div className="flex items-center gap-2.5">
         {hasBackButton ? (
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={handleBack}
             className="size-9 rounded-full flex items-center justify-center hover:bg-muted/80 text-foreground transition-colors shrink-0 -ml-1.5 min-h-[44px] min-w-[44px]"
             aria-label="Quay lại"
           >

@@ -1,4 +1,10 @@
-import { useMemo, useState } from "react";
+import {
+  type BaseSyntheticEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,7 +49,7 @@ export const useCreateInvoice = () => {
     if (!existingInvoice) {
       return [
         {
-          id: `item_${Date.now()}`,
+          id: "item_initial_1",
           name: "",
           price: 0,
           assignedMemberIds: [currentUserId],
@@ -72,59 +78,123 @@ export const useCreateInvoice = () => {
     name: "items",
   });
 
-  const [prevInvoiceId, setPrevInvoiceId] = useState<string | null>(
-    existingInvoice?.id ?? null,
-  );
+  // Snapshot state luôn tạo tham chiếu mới để React 19 Compiler cập nhật LiveReceiptPreview tức thì
+  const [liveSnapshot, setLiveSnapshot] = useState<{
+    title: string;
+    selectedMemberIds: string[];
+    items: InvoiceFormData["items"];
+  }>(() => ({
+    title: existingInvoice?.title ?? "",
+    selectedMemberIds: initialMemberIds,
+    items: initialItems,
+  }));
 
-  if (existingInvoice && existingInvoice.id !== prevInvoiceId) {
-    setPrevInvoiceId(existingInvoice.id);
-    form.reset({
-      title: existingInvoice.title,
-      selectedMemberIds: initialMemberIds,
-      items: initialItems,
+  useEffect(() => {
+    const syncSnapshot = () => {
+      const values = form.getValues();
+      setLiveSnapshot({
+        title: values.title ?? "",
+        selectedMemberIds: [...(values.selectedMemberIds ?? [])],
+        items: (values.items ?? []).map((item, idx) => ({
+          id: item?.id || `item_${idx}`,
+          name: item?.name ?? "",
+          price: Number(item?.price) || 0,
+          assignedMemberIds: [...(item?.assignedMemberIds ?? [])],
+        })),
+      });
+    };
+
+    syncSnapshot();
+    const subscription = form.watch(() => {
+      syncSnapshot();
     });
-  } else if (!existingInvoice && prevInvoiceId !== null) {
-    setPrevInvoiceId(null);
-    form.reset({
-      title: "",
-      selectedMemberIds: [currentUserId],
-      items: [
-        {
-          id: `item_${Date.now()}`,
-          name: "",
-          price: 0,
-          assignedMemberIds: [currentUserId],
-        },
-      ],
-    });
-  }
 
-  const selectedMemberIds = form.watch("selectedMemberIds");
-  const watchItems = form.watch("items");
+    return () => subscription.unsubscribe();
+  }, [form]);
 
-  const selectedMembers = useMemo(
-    () => members.filter((m) => selectedMemberIds.includes(m.id)),
-    [members, selectedMemberIds],
+  const prevInvoiceIdRef = useRef<string | null>(existingInvoice?.id ?? null);
+
+  useEffect(() => {
+    const currentEditId = existingInvoice?.id ?? null;
+    if (currentEditId === prevInvoiceIdRef.current) return;
+    prevInvoiceIdRef.current = currentEditId;
+
+    if (existingInvoice) {
+      form.reset({
+        title: existingInvoice.title,
+        selectedMemberIds: initialMemberIds,
+        items: initialItems,
+      });
+    } else {
+      form.reset({
+        title: "",
+        selectedMemberIds: [currentUserId],
+        items: [
+          {
+            id: `item_${Date.now()}`,
+            name: "",
+            price: 0,
+            assignedMemberIds: [currentUserId],
+          },
+        ],
+      });
+    }
+  }, [currentUserId, existingInvoice, form, initialItems, initialMemberIds]);
+
+  // Đồng bộ lại ID nếu store vừa chuyển từ "m1" sang ID Google ("usr_...")
+  useEffect(() => {
+    if (isEditMode) return;
+    const validMemberIds = new Set(members.map((m) => m.id));
+    if (!validMemberIds.has(currentUserId)) return;
+
+    const currentSelected = form.getValues("selectedMemberIds");
+    if (currentSelected.includes("m1") && !validMemberIds.has("m1")) {
+      const nextSelected = Array.from(
+        new Set(
+          currentSelected.map((id) => (id === "m1" ? currentUserId : id)),
+        ),
+      );
+      form.setValue("selectedMemberIds", nextSelected);
+
+      const currentItems = form.getValues("items");
+      const nextItems = currentItems.map((item) => ({
+        ...item,
+        assignedMemberIds: Array.from(
+          new Set(
+            item.assignedMemberIds.map((id) =>
+              id === "m1" ? currentUserId : id,
+            ),
+          ),
+        ),
+      }));
+      form.setValue("items", nextItems);
+    }
+  }, [currentUserId, form, isEditMode, members]);
+
+  const selectedMemberIds = liveSnapshot.selectedMemberIds;
+  const items = liveSnapshot.items;
+
+  const selectedMembers = members.filter((m) =>
+    selectedMemberIds.includes(m.id),
   );
 
-  const breakdowns = useMemo(
-    () => calculateMemberSplits(watchItems || [], selectedMembers),
-    [watchItems, selectedMembers],
-  );
+  const breakdowns = calculateMemberSplits(items, selectedMembers);
 
   const handleToggleMember = (mId: string) => {
     const current = form.getValues("selectedMemberIds");
     const updated = current.includes(mId)
       ? current.filter((id) => id !== mId)
       : [...current, mId];
-    form.setValue("selectedMemberIds", updated);
+    form.setValue("selectedMemberIds", updated, { shouldDirty: true });
   };
 
   const handleAddNewMember = (name: string) => {
     const newM = { id: `m_${Date.now()}`, name, avatar: name[0].toUpperCase() };
     addMember(newM);
     const current = form.getValues("selectedMemberIds");
-    form.setValue("selectedMemberIds", [...current, newM.id]);
+    form.setValue("selectedMemberIds", [...current, newM.id], {
+      shouldDirty: true,
+    });
   };
 
   const handleAddItem = () => {
@@ -138,27 +208,28 @@ export const useCreateInvoice = () => {
     });
   };
 
-  const handleSubmit = form.handleSubmit((data) => {
-    if (isEditMode && existingInvoice) {
-      updateInvoice({
-        ...existingInvoice,
-        title: data.title,
-        items: data.items,
-      });
-      toast.success(TOAST_TEXTS.UPDATE_INVOICE_SUCCESS);
-    } else {
-      addInvoice({
-        id: `inv_${Date.now()}`,
-        title: data.title,
-        paidByMemberId: currentUserId,
-        createdAt: new Date().toISOString(),
-        status: "partial",
-        items: data.items,
-      });
-      toast.success(TOAST_TEXTS.CREATE_INVOICE_SUCCESS);
-    }
-    router.push(ROUTES.HOME);
-  });
+  const handleSubmit = (e?: BaseSyntheticEvent) =>
+    form.handleSubmit((data) => {
+      if (isEditMode && existingInvoice) {
+        updateInvoice({
+          ...existingInvoice,
+          title: data.title,
+          items: data.items,
+        });
+        toast.success(TOAST_TEXTS.UPDATE_INVOICE_SUCCESS);
+      } else {
+        addInvoice({
+          id: `inv_${Date.now()}`,
+          title: data.title,
+          paidByMemberId: currentUserId,
+          createdAt: new Date().toISOString(),
+          status: "partial",
+          items: data.items,
+        });
+        toast.success(TOAST_TEXTS.CREATE_INVOICE_SUCCESS);
+      }
+      router.push(ROUTES.HOME);
+    })(e);
 
   const handleNextRow = (currentIndex: number) => {
     const currentItems = form.getValues("items");
@@ -184,6 +255,8 @@ export const useCreateInvoice = () => {
 
   return {
     form,
+    title: liveSnapshot.title,
+    items,
     isEditMode,
     fields,
     allMembers: members,

@@ -47,4 +47,8 @@ export interface AppState {
   updateCurrentUserProfile: (profileData: Partial<Member>) => void;
   importData: (newState: Partial<AppState>) => void;
   resetData: () => void;
+  migrateCurrentUserId: (
+    newUserId: string,
+    profile?: { name?: string; avatar?: string },
+  ) => void;
 }

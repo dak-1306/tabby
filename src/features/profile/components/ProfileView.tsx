@@ -10,6 +10,7 @@ import { AppGuideSection } from "./AppGuideSection";
 import { DataBackupSection } from "./DataBackupSection";
 import { DangerZoneSection } from "./DangerZoneSection";
 import { PROFILE_TEXTS } from "../constants";
+import { GoogleSyncCard } from "@/components/common/GoogleSyncCard";
 
 export const ProfileView: React.FC = () => {
   const {
@@ -29,6 +30,7 @@ export const ProfileView: React.FC = () => {
       <Header />
 
       <main className="flex-1 overflow-y-auto px-4 py-4 scrollbar-none space-y-4">
+        <GoogleSyncCard />
         <UserProfileSection
           form={form}
           onSave={handleSave}
