@@ -29,6 +29,8 @@ const GroupInvoiceFormInner: React.FC<InnerFormProps> = ({
   const router = useRouter();
   const {
     form,
+    title,
+    items,
     isEditMode,
     fields,
     paidByMemberId,
@@ -52,12 +54,8 @@ const GroupInvoiceFormInner: React.FC<InnerFormProps> = ({
 
   const {
     register,
-    watch,
     formState: { errors },
   } = form;
-
-  const title = watch("title");
-  const items = watch("items");
 
   return (
     <div className="flex-1 min-h-0 flex flex-col w-full overflow-hidden">
@@ -67,23 +65,25 @@ const GroupInvoiceFormInner: React.FC<InnerFormProps> = ({
           type="button"
           onClick={() => router.push(GROUP_ROUTES.DETAIL(group.id))}
           className="size-9 rounded-xl border border-border/60 flex items-center justify-center hover:bg-muted shrink-0"
-          aria-label="Quay lại nhóm"
+          aria-label={GROUP_DETAIL_TEXTS.ARIA_BACK_TO_GROUP}
         >
           <ArrowLeft className="size-4" />
         </button>
         <div className="min-w-0">
           <h1 className="text-sm font-extrabold truncate">
-            {isEditMode ? "Sửa bill nhóm" : "Thêm bill nhóm mới"}
+            {isEditMode
+              ? GROUP_DETAIL_TEXTS.EDIT_BILL_TITLE
+              : GROUP_DETAIL_TEXTS.CREATE_BILL_TITLE}
           </h1>
           <p className="text-[11px] text-muted-foreground truncate">
-            Nhóm: {group.name}
+            {GROUP_DETAIL_TEXTS.GROUP_PREFIX} {group.name}
           </p>
         </div>
       </header>
 
       {/* Nội dung Form */}
       <main className="flex-1 min-h-0 overflow-y-auto px-4 py-4 scrollbar-none space-y-5">
-        {/* Bộ chọn Người thanh toán (Điểm khác biệt cốt lõi của Bill Nhóm) */}
+        {/* Bộ chọn Người thanh toán */}
         <div className="space-y-2 p-3.5 rounded-2xl bg-primary/5 border border-primary/25">
           <label className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
             <Wallet className="size-3.5" />
@@ -172,7 +172,7 @@ const GroupInvoiceFormInner: React.FC<InnerFormProps> = ({
         {/* Xem trước trực tiếp */}
         <LiveReceiptPreview
           title={title}
-          items={items || []}
+          items={items}
           selectedMembers={selectedMembers}
           breakdowns={breakdowns}
         />
@@ -203,7 +203,7 @@ const GroupCreateContent: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
-        Đang tải dữ liệu nhóm...
+        {GROUP_DETAIL_TEXTS.LOADING_GROUP}
       </div>
     );
   }
@@ -211,7 +211,7 @@ const GroupCreateContent: React.FC = () => {
   if (!group) {
     return (
       <div className="flex-1 flex items-center justify-center p-4 text-xs text-destructive">
-        Không tìm thấy nhóm.
+        {GROUP_DETAIL_TEXTS.NOT_FOUND_TITLE}
       </div>
     );
   }
@@ -234,7 +234,7 @@ export const GroupCreateInvoiceView: React.FC = () => {
       <Suspense
         fallback={
           <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
-            Đang tải...
+            {GROUP_DETAIL_TEXTS.LOADING_GENERIC}
           </div>
         }
       >

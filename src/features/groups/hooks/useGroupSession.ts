@@ -22,7 +22,6 @@ export const useGroupSession = (groupId: string) => {
   const setSessionMember = useGroupStore((s) => s.setSessionMember);
   const addAndSelectMember = useGroupStore((s) => s.addAndSelectMember);
 
-  // Kiểm tra Zalo/Messenger WebView chuẩn React 19 (không gây cascading render)
   const isInAppBrowser = useSyncExternalStore(
     emptySubscribe,
     getIsInAppBrowser,
@@ -40,7 +39,6 @@ export const useGroupSession = (groupId: string) => {
     syncGroupById(groupId).then((freshGroup) => {
       if (isCancelled) return;
 
-      // Nếu URL có ?m=memberId hợp lệ -> Tự động lưu danh tính và làm sạch URL
       if (freshGroup && urlMemberId) {
         const matched = freshGroup.members.find((m) => m.id === urlMemberId);
         if (matched) {
@@ -52,12 +50,21 @@ export const useGroupSession = (groupId: string) => {
       setIsFetched(true);
     });
 
+    // Tự động đồng bộ lại khi người dùng chuyển từ Zalo/App Ngân hàng quay lại tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void syncGroupById(groupId);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       isCancelled = true;
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [groupId, pathname, router, setSessionMember, syncGroupById, urlMemberId]);
 
-  // Suy xuất (derive) trực tiếp danh tính hiện tại từ store, không cần state trung gian
   const currentMember: GroupMember | null =
     group?.members.find((m) => m.id === (urlMemberId || savedMemberId)) ?? null;
 

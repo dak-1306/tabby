@@ -21,6 +21,7 @@ import { GroupMember } from "@/types/group";
 import {
   CURRENCY_SYMBOL,
   DRAWER_TEXTS,
+  GROUP_DETAIL_TEXTS,
   GROUP_ROUTES,
   LOCALE_VI,
   TOAST_TEXTS,
@@ -46,16 +47,13 @@ export const GroupInvoiceDetailDrawer: React.FC<
   const payer = members.find((m) => m.id === invoice.paidByMemberId);
   const totalAmount = invoice.items.reduce((s, it) => s + it.price, 0);
 
-  // Tính tổng phần của từng người trong bill này
+  // Cộng dồn phần chia chính xác trước, chỉ làm tròn khi hiển thị
   const perMemberTotals = new Map<string, number>();
   invoice.items.forEach((item) => {
     if (item.assignedMemberIds.length === 0) return;
     const share = calculateItemShare(item.price, item.assignedMemberIds.length);
     item.assignedMemberIds.forEach((mId) => {
-      perMemberTotals.set(
-        mId,
-        roundToThousand((perMemberTotals.get(mId) || 0) + share),
-      );
+      perMemberTotals.set(mId, (perMemberTotals.get(mId) || 0) + share);
     });
   });
 
@@ -79,11 +77,11 @@ export const GroupInvoiceDetailDrawer: React.FC<
             {invoice.title}
           </DrawerTitle>
           <DrawerDescription className="text-xs">
-            Người trả:{" "}
+            {GROUP_DETAIL_TEXTS.INVOICE_PAYER_PREFIX}{" "}
             <strong className="text-foreground">
-              {payer?.name || "Thành viên"}
+              {payer?.name || GROUP_DETAIL_TEXTS.DEFAULT_MEMBER_NAME}
             </strong>{" "}
-            • Tổng:{" "}
+            {GROUP_DETAIL_TEXTS.INVOICE_TOTAL_PREFIX}{" "}
             <strong className="text-primary">
               {totalAmount.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
             </strong>
@@ -97,9 +95,8 @@ export const GroupInvoiceDetailDrawer: React.FC<
               {DRAWER_TEXTS.INVOICE_ITEMS_TITLE}
             </p>
             {invoice.items.map((item) => {
-              const share = calculateItemShare(
-                item.price,
-                item.assignedMemberIds.length,
+              const share = roundToThousand(
+                calculateItemShare(item.price, item.assignedMemberIds.length),
               );
               return (
                 <div
@@ -133,7 +130,8 @@ export const GroupInvoiceDetailDrawer: React.FC<
                       })}
                     </div>
                     <span className="shrink-0 font-semibold">
-                      {share.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}/người
+                      {share.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
+                      {GROUP_DETAIL_TEXTS.PER_PERSON_UNIT}
                     </span>
                   </div>
                 </div>
@@ -144,7 +142,7 @@ export const GroupInvoiceDetailDrawer: React.FC<
           {/* Tổng hợp chia từng người */}
           <div className="space-y-1.5 pt-2 border-t border-border/50">
             <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Phần chia từng thành viên
+              {GROUP_DETAIL_TEXTS.MEMBER_SHARES_TITLE}
             </p>
             <div className="grid grid-cols-2 gap-1.5">
               {Array.from(perMemberTotals.entries()).map(([mId, amount]) => {
@@ -157,7 +155,8 @@ export const GroupInvoiceDetailDrawer: React.FC<
                   >
                     <span className="font-semibold truncate">{m.name}</span>
                     <span className="font-bold text-primary shrink-0">
-                      {amount.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
+                      {roundToThousand(amount).toLocaleString(LOCALE_VI)}{" "}
+                      {CURRENCY_SYMBOL}
                     </span>
                   </div>
                 );
@@ -175,7 +174,7 @@ export const GroupInvoiceDetailDrawer: React.FC<
               onClick={handleCopyBill}
             >
               <Copy className="size-4" />
-              Copy gửi nhóm
+              {GROUP_DETAIL_TEXTS.BTN_COPY_BILL_GROUP}
             </Button>
 
             <Button
@@ -190,7 +189,7 @@ export const GroupInvoiceDetailDrawer: React.FC<
               }}
             >
               <Edit2 className="size-4" />
-              Sửa hóa đơn
+              {GROUP_DETAIL_TEXTS.BTN_EDIT_BILL}
             </Button>
           </div>
 

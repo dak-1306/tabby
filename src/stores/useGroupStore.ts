@@ -27,6 +27,10 @@ interface GroupStoreState {
   syncJoinedGroups: () => Promise<void>;
 
   setSessionMember: (groupId: string, memberId: string) => void;
+  addMember: (
+    groupId: string,
+    memberName: string,
+  ) => Promise<GroupMember | null>;
   addAndSelectMember: (
     groupId: string,
     memberName: string,
@@ -118,6 +122,19 @@ export const useGroupStore = create<GroupStoreState>()(
             [groupId]: memberId,
           },
         }));
+      },
+
+      addMember: async (groupId, memberName) => {
+        const res = await groupService.addMemberToGroup(groupId, memberName);
+        if (!res) return null;
+
+        set((state) => ({
+          cachedGroups: {
+            ...state.cachedGroups,
+            [groupId]: res.group,
+          },
+        }));
+        return res.member;
       },
 
       addAndSelectMember: async (groupId, memberName) => {

@@ -33,13 +33,13 @@ export const JoinGroupCodeDrawer: React.FC<JoinGroupCodeDrawerProps> = ({
   const handleJoin = async () => {
     const cleaned = code.trim().toUpperCase();
     if (cleaned.length < 6) {
-      setError("Mã nhóm gồm đủ 6 ký tự.");
+      setError(GROUP_TEXTS.ERR_INVALID_CODE_LENGTH);
       return;
     }
 
     const found = await syncGroupByCode(cleaned);
     if (!found) {
-      setError("Không tìm thấy nhóm với mã này. Kiểm tra lại nhé!");
+      setError(GROUP_TEXTS.ERR_GROUP_NOT_FOUND);
       return;
     }
 
@@ -80,7 +80,7 @@ export const JoinGroupCodeDrawer: React.FC<JoinGroupCodeDrawerProps> = ({
               if (error) setError("");
             }}
             onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-            placeholder="VD: DL2026"
+            placeholder={GROUP_TEXTS.JOIN_CODE_PLACEHOLDER}
             className="text-center text-xl font-black tracking-[0.25em] uppercase h-12"
           />
 
@@ -98,7 +98,7 @@ export const JoinGroupCodeDrawer: React.FC<JoinGroupCodeDrawerProps> = ({
             onClick={handleJoin}
             className="w-full min-h-[48px] font-bold text-sm gap-2"
           >
-            Tham gia nhóm
+            {GROUP_TEXTS.BTN_SUBMIT_JOIN_CODE}
             <ArrowRight className="size-5" />
           </Button>
         </div>

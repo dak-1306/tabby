@@ -58,11 +58,11 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
 
   const handleSubmit = async () => {
     if (!groupName.trim()) {
-      setError("Vui lòng nhập tên nhóm.");
+      setError(GROUP_TEXTS.ERR_GROUP_NAME_REQUIRED);
       return;
     }
     if (!creatorName.trim()) {
-      setError("Vui lòng nhập tên của bạn.");
+      setError(GROUP_TEXTS.ERR_CREATOR_NAME_REQUIRED);
       return;
     }
 
@@ -165,7 +165,7 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
                     className="shrink-0 min-h-[44px] px-3.5 font-bold gap-1"
                   >
                     <Plus className="size-4" />
-                    Thêm
+                    {GROUP_TEXTS.BTN_ADD_MEMBER_TAG}
                   </Button>
                 </div>
 
@@ -181,7 +181,7 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
                           type="button"
                           onClick={() => handleRemoveMemberTag(name)}
                           className="hover:text-destructive"
-                          aria-label={`Xóa ${name}`}
+                          aria-label={`${GROUP_TEXTS.ARIA_REMOVE_MEMBER_PREFIX} ${name}`}
                         >
                           <X className="size-3.5" />
                         </button>
@@ -206,7 +206,7 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
                 className="w-full min-h-[48px] font-bold text-sm gap-2"
               >
                 <Check className="size-5" />
-                Tạo nhóm & Lấy link mời
+                {GROUP_TEXTS.BTN_SUBMIT_CREATE_GROUP}
               </Button>
             </div>
           </>
@@ -214,12 +214,14 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
           <>
             <DrawerHeader className="text-left pb-2">
               <DrawerTitle className="text-base font-extrabold text-primary">
-                Tạo nhóm &ldquo;{createdGroup.name}&rdquo; thành công!
+                {GROUP_TEXTS.CREATE_SUCCESS_PREFIX}
+                {createdGroup.name}
+                {GROUP_TEXTS.CREATE_SUCCESS_SUFFIX}
               </DrawerTitle>
               <DrawerDescription className="text-xs">
-                Mã nhóm:{" "}
+                {GROUP_TEXTS.GROUP_CODE_PREFIX}{" "}
                 <strong className="text-foreground">{createdGroup.code}</strong>{" "}
-                • Gửi link bên dưới vào Zalo/Messenger để mọi người cùng vào.
+                {GROUP_TEXTS.CREATE_SUCCESS_DESC_SUFFIX}
               </DrawerDescription>
             </DrawerHeader>
 
@@ -227,7 +229,7 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
               <div className="p-3 rounded-2xl bg-muted/40 border border-border/60 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-foreground">
-                    Link mời chung (Gửi vào group chat)
+                    {GROUP_TEXTS.GENERAL_LINK_LABEL}
                   </span>
                   <Button
                     type="button"
@@ -244,12 +246,12 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
                     {copiedKey === "general" ? (
                       <>
                         <Check className="size-3.5 text-primary" />
-                        Đã chép
+                        {GROUP_TEXTS.BTN_COPIED}
                       </>
                     ) : (
                       <>
                         <Copy className="size-3.5" />
-                        Sao chép
+                        {GROUP_TEXTS.BTN_COPY}
                       </>
                     )}
                   </Button>
@@ -262,7 +264,7 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
               {createdGroup.members.length > 1 && (
                 <div className="space-y-1.5">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Hoặc gửi link định danh riêng (Tự nhận tên)
+                    {GROUP_TEXTS.PERSONAL_LINKS_LABEL}
                   </span>
                   <div className="space-y-1.5">
                     {createdGroup.members
@@ -277,7 +279,7 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
                             className="flex items-center justify-between p-2.5 rounded-xl bg-card border border-border/60"
                           >
                             <span className="text-xs font-bold text-foreground">
-                              Link cho {m.name}
+                              {GROUP_TEXTS.PERSONAL_LINK_FOR_PREFIX} {m.name}
                             </span>
                             <Button
                               type="button"
@@ -289,12 +291,12 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
                               {copiedKey === m.id ? (
                                 <>
                                   <Check className="size-3.5 text-primary" />
-                                  Đã chép
+                                  {GROUP_TEXTS.BTN_COPIED}
                                 </>
                               ) : (
                                 <>
                                   <Copy className="size-3.5" />
-                                  Chép link
+                                  {GROUP_TEXTS.BTN_COPY_LINK}
                                 </>
                               )}
                             </Button>
@@ -317,7 +319,7 @@ export const CreateGroupDrawer: React.FC<CreateGroupDrawerProps> = ({
                 }}
                 className="w-full min-h-[48px] font-bold text-sm gap-2"
               >
-                Vào nhóm ngay
+                {GROUP_TEXTS.BTN_ENTER_GROUP_NOW}
                 <ArrowRight className="size-5" />
               </Button>
             </div>

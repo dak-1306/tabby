@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Users, Plus, Hash, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { GROUP_ROUTES, GROUP_TEXTS } from "@/constants";
+import { GROUP_DETAIL_TEXTS, GROUP_ROUTES, GROUP_TEXTS } from "@/constants";
 import { useGroupStore } from "@/stores/useGroupStore";
 import { CreateGroupDrawer } from "./CreateGroupDrawer";
 import { JoinGroupCodeDrawer } from "./JoinGroupCodeDrawer";
@@ -75,7 +75,8 @@ export const HomeGroupSection: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  {g.members.length} thành viên • {g.invoices.length} hóa đơn
+                  {g.members.length} {GROUP_DETAIL_TEXTS.MEMBERS_UNIT} •{" "}
+                  {g.invoices.length} {GROUP_DETAIL_TEXTS.INVOICES_UNIT}
                 </p>
               </div>
               <ChevronRight className="size-4 text-muted-foreground shrink-0" />

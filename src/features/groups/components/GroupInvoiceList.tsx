@@ -4,7 +4,8 @@ import React from "react";
 import { Receipt, ChevronRight } from "lucide-react";
 import { Invoice } from "@/types";
 import { GroupMember } from "@/types/group";
-import { CURRENCY_SYMBOL, LOCALE_VI } from "@/constants";
+import { CURRENCY_SYMBOL, GROUP_DETAIL_TEXTS, LOCALE_VI } from "@/constants";
+import { roundToThousand } from "@/utils/calculations";
 import { getMemberShareInInvoice } from "../utils/groupSettlement";
 
 interface GroupInvoiceListProps {
@@ -24,10 +25,13 @@ export const GroupInvoiceList: React.FC<GroupInvoiceListProps> = ({
     return (
       <div className="p-6 rounded-2xl border-2 border-dashed border-border/70 text-center space-y-2">
         <Receipt className="size-8 text-muted-foreground mx-auto" />
-        <h3 className="text-sm font-bold">Chưa có hóa đơn nào trong nhóm</h3>
+        <h3 className="text-sm font-bold">
+          {GROUP_DETAIL_TEXTS.EMPTY_INVOICES_TITLE}
+        </h3>
         <p className="text-xs text-muted-foreground">
-          Bấm nút <strong>+ Thêm bill nhóm</strong> bên dưới để ghi lại khoản
-          chi đầu tiên.
+          {GROUP_DETAIL_TEXTS.EMPTY_INVOICES_DESC_PREFIX}{" "}
+          <strong>+ {GROUP_DETAIL_TEXTS.BTN_ADD_BILL}</strong>{" "}
+          {GROUP_DETAIL_TEXTS.EMPTY_INVOICES_DESC_SUFFIX}
         </p>
       </div>
     );
@@ -36,7 +40,7 @@ export const GroupInvoiceList: React.FC<GroupInvoiceListProps> = ({
   return (
     <section className="space-y-2.5">
       <h2 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground">
-        Danh sách hóa đơn ({invoices.length})
+        {GROUP_DETAIL_TEXTS.INVOICE_LIST_TITLE} ({invoices.length})
       </h2>
 
       <div className="space-y-2">
@@ -44,7 +48,7 @@ export const GroupInvoiceList: React.FC<GroupInvoiceListProps> = ({
           const totalAmount = inv.items.reduce((s, it) => s + it.price, 0);
           const payer = members.find((m) => m.id === inv.paidByMemberId);
           const myShare = currentMemberId
-            ? getMemberShareInInvoice(inv, currentMemberId)
+            ? roundToThousand(getMemberShareInInvoice(inv, currentMemberId))
             : 0;
 
           return (
@@ -62,10 +66,10 @@ export const GroupInvoiceList: React.FC<GroupInvoiceListProps> = ({
                   <span>
                     <strong className="text-foreground">
                       {payer?.id === currentMemberId
-                        ? "Bạn"
-                        : payer?.name || "Thành viên"}
+                        ? GROUP_DETAIL_TEXTS.SELF_LABEL
+                        : payer?.name || GROUP_DETAIL_TEXTS.DEFAULT_MEMBER_NAME}
                     </strong>{" "}
-                    trả{" "}
+                    {GROUP_DETAIL_TEXTS.PAID_VERB}{" "}
                     <strong className="text-primary">
                       {totalAmount.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
                     </strong>
@@ -81,8 +85,8 @@ export const GroupInvoiceList: React.FC<GroupInvoiceListProps> = ({
                 {currentMemberId && (
                   <span className="text-[11px] font-bold px-2 py-1 rounded-lg bg-muted/60 text-foreground">
                     {myShare > 0
-                      ? `Bạn: ${myShare.toLocaleString(LOCALE_VI)}${CURRENCY_SYMBOL}`
-                      : "Không ăn"}
+                      ? `${GROUP_DETAIL_TEXTS.MY_SHARE_PREFIX} ${myShare.toLocaleString(LOCALE_VI)}${CURRENCY_SYMBOL}`
+                      : GROUP_DETAIL_TEXTS.NOT_PARTICIPATING_LABEL}
                   </span>
                 )}
                 <ChevronRight className="size-4 text-muted-foreground" />

@@ -1,6 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  type BaseSyntheticEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,7 +60,7 @@ export const useGroupCreateInvoice = ({
     if (!existingInvoice) {
       return [
         {
-          id: `item_${Date.now()}`,
+          id: "item_initial_1",
           name: "",
           price: 0,
           assignedMemberIds: [defaultPayerId],
@@ -83,29 +89,75 @@ export const useGroupCreateInvoice = ({
     name: "items",
   });
 
-  const selectedMemberIds = form.watch("selectedMemberIds");
-  const watchItems = form.watch("items");
+  // Đồng bộ lại form và người trả tiền nếu chuyển sang chế độ sửa bill
+  const prevEditIdRef = useRef<string | null>(existingInvoice?.id ?? null);
+  useEffect(() => {
+    const currentId = existingInvoice?.id ?? null;
+    if (currentId === prevEditIdRef.current) return;
+    prevEditIdRef.current = currentId;
 
-  const selectedMembers = useMemo(
-    () => group.members.filter((m) => selectedMemberIds.includes(m.id)),
-    [group.members, selectedMemberIds],
+    if (existingInvoice) {
+      setPaidByMemberId(existingInvoice.paidByMemberId);
+      form.reset({
+        title: existingInvoice.title,
+        selectedMemberIds: initialMemberIds,
+        items: initialItems,
+      });
+    }
+  }, [existingInvoice, form, initialItems, initialMemberIds]);
+
+  // Snapshot state giúp LiveReceiptPreview cập nhật tức thì theo từng phím gõ
+  const [liveSnapshot, setLiveSnapshot] = useState<{
+    title: string;
+    selectedMemberIds: string[];
+    items: InvoiceFormData["items"];
+  }>(() => ({
+    title: existingInvoice?.title ?? "",
+    selectedMemberIds: initialMemberIds,
+    items: initialItems,
+  }));
+
+  useEffect(() => {
+    const syncSnapshot = () => {
+      const values = form.getValues();
+      setLiveSnapshot({
+        title: values.title ?? "",
+        selectedMemberIds: [...(values.selectedMemberIds ?? [])],
+        items: (values.items ?? []).map((item, idx) => ({
+          id: item?.id || `item_${idx}`,
+          name: item?.name ?? "",
+          price: Number(item?.price) || 0,
+          assignedMemberIds: [...(item?.assignedMemberIds ?? [])],
+        })),
+      });
+    };
+
+    syncSnapshot();
+    const subscription = form.watch(() => {
+      syncSnapshot();
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  const selectedMemberIds = liveSnapshot.selectedMemberIds;
+  const items = liveSnapshot.items;
+
+  const selectedMembers = group.members.filter((m) =>
+    selectedMemberIds.includes(m.id),
   );
 
-  const breakdowns = useMemo(
-    () => calculateMemberSplits(watchItems || [], selectedMembers),
-    [watchItems, selectedMembers],
-  );
+  const breakdowns = calculateMemberSplits(items, selectedMembers);
 
   const handleToggleMember = (mId: string) => {
     const current = form.getValues("selectedMemberIds");
     const updated = current.includes(mId)
       ? current.filter((id) => id !== mId)
       : [...current, mId];
-    form.setValue("selectedMemberIds", updated);
+    form.setValue("selectedMemberIds", updated, { shouldDirty: true });
   };
 
   const handleAddNewMember = async (name: string) => {
-    // Giữ nguyên session hiện tại của người đang thao tác
     const currentSessionMemberId =
       useGroupStore.getState().sessions[group.id] || defaultPayerId;
     const created = await addAndSelectMember(group.id, name);
@@ -114,7 +166,9 @@ export const useGroupCreateInvoice = ({
     if (created) {
       const current = form.getValues("selectedMemberIds");
       if (!current.includes(created.id)) {
-        form.setValue("selectedMemberIds", [...current, created.id]);
+        form.setValue("selectedMemberIds", [...current, created.id], {
+          shouldDirty: true,
+        });
       }
     }
   };
@@ -153,31 +207,34 @@ export const useGroupCreateInvoice = ({
     }, 50);
   };
 
-  const handleSubmit = form.handleSubmit(async (data) => {
-    if (isEditMode && existingInvoice) {
-      await updateGroupInvoice(group.id, {
-        ...existingInvoice,
-        title: data.title,
-        paidByMemberId,
-        items: data.items,
-      });
-      toast.success(TOAST_TEXTS.UPDATE_INVOICE_SUCCESS);
-    } else {
-      await addGroupInvoice(group.id, {
-        id: `inv_${Date.now().toString(36)}`,
-        title: data.title,
-        paidByMemberId,
-        createdAt: new Date().toISOString(),
-        status: "partial",
-        items: data.items,
-      });
-      toast.success(TOAST_TEXTS.CREATE_INVOICE_SUCCESS);
-    }
-    router.push(GROUP_ROUTES.DETAIL(group.id));
-  });
+  const handleSubmit = (e?: BaseSyntheticEvent) =>
+    form.handleSubmit(async (data) => {
+      if (isEditMode && existingInvoice) {
+        await updateGroupInvoice(group.id, {
+          ...existingInvoice,
+          title: data.title,
+          paidByMemberId,
+          items: data.items,
+        });
+        toast.success(TOAST_TEXTS.UPDATE_INVOICE_SUCCESS);
+      } else {
+        await addGroupInvoice(group.id, {
+          id: `inv_${Date.now().toString(36)}`,
+          title: data.title,
+          paidByMemberId,
+          createdAt: new Date().toISOString(),
+          status: "partial",
+          items: data.items,
+        });
+        toast.success(TOAST_TEXTS.CREATE_INVOICE_SUCCESS);
+      }
+      router.push(GROUP_ROUTES.DETAIL(group.id));
+    })(e);
 
   return {
     form,
+    title: liveSnapshot.title,
+    items,
     isEditMode,
     fields,
     paidByMemberId,

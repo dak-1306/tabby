@@ -14,13 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { InlineConfirmButton } from "@/components/common/InlineConfirmButton";
-import {
-  ArrowRight,
-  Copy,
-  ChevronDown,
-  ChevronUp,
-  CheckCircle2,
-} from "lucide-react";
+import { ArrowRight, Copy, ChevronDown, ChevronUp } from "lucide-react";
 import {
   CURRENCY_SYMBOL,
   DRAWER_TEXTS,
@@ -87,7 +81,7 @@ export const GroupSettlementDetailDrawer: React.FC<
 
             <div className="flex flex-col items-center gap-1 px-2">
               <span className="text-[10px] font-bold uppercase text-muted-foreground">
-                Cần gửi cho
+                {GROUP_DETAIL_TEXTS.NEED_TO_SEND_LABEL}
               </span>
               <ArrowRight className="size-5 text-primary" />
             </div>
@@ -108,8 +102,8 @@ export const GroupSettlementDetailDrawer: React.FC<
             {pair.netAmount.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
           </DrawerTitle>
           <DrawerDescription className="text-center text-xs">
-            Chi tiết bù trừ các hóa đơn giữa {pair.fromMember.name} và{" "}
-            {pair.toMember.name}
+            {GROUP_DETAIL_TEXTS.PAIR_DETAIL_DESC_PREFIX} {pair.fromMember.name}{" "}
+            {GROUP_DETAIL_TEXTS.PAIR_DETAIL_DESC_AND} {pair.toMember.name}
           </DrawerDescription>
         </DrawerHeader>
 
@@ -137,10 +131,10 @@ export const GroupSettlementDetailDrawer: React.FC<
                     <p className="text-[10px] text-muted-foreground mt-0.5">
                       {new Date(entry.date).toLocaleDateString(LOCALE_VI)} •{" "}
                       {entry.type === "settlement"
-                        ? "Giao dịch chốt nợ"
+                        ? GROUP_DETAIL_TEXTS.SETTLEMENT_TX_LABEL
                         : isPositive
-                          ? `${pair.toMember.name} trả hộ`
-                          : `${pair.fromMember.name} trả hộ`}
+                          ? `${pair.toMember.name} ${GROUP_DETAIL_TEXTS.PAID_FOR_SUFFIX}`
+                          : `${pair.fromMember.name} ${GROUP_DETAIL_TEXTS.PAID_FOR_SUFFIX}`}
                     </p>
                   </div>
 
@@ -183,7 +177,9 @@ export const GroupSettlementDetailDrawer: React.FC<
                         </span>
                         <span>
                           {it.totalPrice.toLocaleString(LOCALE_VI)}{" "}
-                          {CURRENCY_SYMBOL} (chia {it.splitCount} →{" "}
+                          {CURRENCY_SYMBOL}{" "}
+                          {GROUP_DETAIL_TEXTS.SPLIT_COUNT_PREFIX}{" "}
+                          {it.splitCount} {GROUP_DETAIL_TEXTS.SPLIT_ARROW}{" "}
                           <strong className="text-foreground">
                             {it.memberShare.toLocaleString(LOCALE_VI)}{" "}
                             {CURRENCY_SYMBOL}
@@ -207,7 +203,7 @@ export const GroupSettlementDetailDrawer: React.FC<
             onClick={handleCopy}
           >
             <Copy className="size-4" />
-            Sao chép đối soát gửi Zalo
+            {GROUP_DETAIL_TEXTS.BTN_COPY_PAIR_ZALO}
           </Button>
 
           <InlineConfirmButton

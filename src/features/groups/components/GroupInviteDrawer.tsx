@@ -64,7 +64,7 @@ export const GroupInviteDrawer: React.FC<GroupInviteDrawerProps> = ({
           <div className="grid grid-cols-2 gap-2">
             <div className="p-3 rounded-2xl bg-primary/10 border border-primary/30 flex flex-col justify-between gap-2">
               <span className="text-[11px] font-bold text-primary">
-                Mã nhóm 6 ký tự
+                {GROUP_TEXTS.GROUP_CODE_CARD_LABEL}
               </span>
               <div className="flex items-center justify-between">
                 <span className="text-base font-black tracking-widest text-foreground">
@@ -86,7 +86,7 @@ export const GroupInviteDrawer: React.FC<GroupInviteDrawerProps> = ({
 
             <div className="p-3 rounded-2xl bg-muted/40 border border-border/60 flex flex-col justify-between gap-2">
               <span className="text-[11px] font-bold text-muted-foreground">
-                Link chung nhóm
+                {GROUP_TEXTS.GENERAL_LINK_CARD_LABEL}
               </span>
               <Button
                 type="button"
@@ -98,12 +98,12 @@ export const GroupInviteDrawer: React.FC<GroupInviteDrawerProps> = ({
                 {copiedKey === "general" ? (
                   <>
                     <Check className="size-3.5 text-primary" />
-                    Đã chép
+                    {GROUP_TEXTS.BTN_COPIED}
                   </>
                 ) : (
                   <>
                     <Copy className="size-3.5" />
-                    Chép link
+                    {GROUP_TEXTS.BTN_COPY_LINK}
                   </>
                 )}
               </Button>
@@ -113,14 +113,14 @@ export const GroupInviteDrawer: React.FC<GroupInviteDrawerProps> = ({
           {/* Thêm thành viên mới vào nhóm */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Thêm thành viên mới
+              {GROUP_TEXTS.ADD_NEW_MEMBER_LABEL}
             </label>
             <div className="flex items-center gap-2">
               <Input
                 value={newMemberName}
                 onChange={(e) => setNewMemberName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddMember()}
-                placeholder="Nhập tên bạn mới..."
+                placeholder={GROUP_TEXTS.NEW_FRIEND_PLACEHOLDER}
               />
               <Button
                 type="button"
@@ -129,7 +129,7 @@ export const GroupInviteDrawer: React.FC<GroupInviteDrawerProps> = ({
                 className="shrink-0 min-h-[44px] px-3.5 font-bold gap-1"
               >
                 <Plus className="size-4" />
-                Thêm
+                {GROUP_TEXTS.BTN_ADD_MEMBER_TAG}
               </Button>
             </div>
           </div>
@@ -137,7 +137,7 @@ export const GroupInviteDrawer: React.FC<GroupInviteDrawerProps> = ({
           {/* Danh sách link cá nhân hóa từng người */}
           <div className="space-y-1.5 pb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Link định danh từng thành viên ({group.members.length})
+              {GROUP_TEXTS.MEMBER_LINKS_LIST_LABEL} ({group.members.length})
             </span>
             <div className="space-y-1.5">
               {group.members.map((m) => {
@@ -167,12 +167,12 @@ export const GroupInviteDrawer: React.FC<GroupInviteDrawerProps> = ({
                       {copiedKey === m.id ? (
                         <>
                           <Check className="size-3.5 text-primary" />
-                          Đã chép
+                          {GROUP_TEXTS.BTN_COPIED}
                         </>
                       ) : (
                         <>
                           <Copy className="size-3.5" />
-                          Chép link riêng
+                          {GROUP_TEXTS.BTN_COPY_PERSONAL_LINK}
                         </>
                       )}
                     </Button>

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { UserCheck, UserPlus, Check } from "lucide-react";
 import { GroupMember } from "@/types/group";
-import { GROUP_TEXTS } from "@/constants";
+import { GROUP_DETAIL_TEXTS, GROUP_TEXTS } from "@/constants";
 
 interface IdentityPickerDrawerProps {
   open: boolean;
@@ -62,7 +62,8 @@ export const IdentityPickerDrawer: React.FC<IdentityPickerDrawerProps> = ({
             {GROUP_TEXTS.IDENTITY_TITLE}
           </DrawerTitle>
           <DrawerDescription className="text-xs">
-            Nhóm <strong className="text-foreground">{groupName}</strong> •{" "}
+            {GROUP_DETAIL_TEXTS.GROUP_PREFIX}{" "}
+            <strong className="text-foreground">{groupName}</strong> •{" "}
             {GROUP_TEXTS.IDENTITY_DESC}
           </DrawerDescription>
         </DrawerHeader>
@@ -108,7 +109,7 @@ export const IdentityPickerDrawer: React.FC<IdentityPickerDrawerProps> = ({
                 className="w-full py-3 rounded-xl border border-dashed border-primary/50 text-primary text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-primary/10 min-h-[44px]"
               >
                 <UserPlus className="size-4" />
-                Tôi chưa có tên trong danh sách
+                {GROUP_TEXTS.BTN_NOT_IN_LIST}
               </button>
             ) : (
               <div className="flex items-center gap-2">
@@ -117,7 +118,7 @@ export const IdentityPickerDrawer: React.FC<IdentityPickerDrawerProps> = ({
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleCreateAndJoin()}
-                  placeholder="Nhập tên của bạn..."
+                  placeholder={GROUP_TEXTS.YOUR_NAME_PLACEHOLDER}
                   className="font-semibold"
                 />
                 <Button
@@ -125,7 +126,7 @@ export const IdentityPickerDrawer: React.FC<IdentityPickerDrawerProps> = ({
                   onClick={handleCreateAndJoin}
                   className="shrink-0 min-h-[44px] font-bold px-4"
                 >
-                  Vào nhóm
+                  {GROUP_TEXTS.BTN_JOIN_AS_NEW}
                 </Button>
               </div>
             )}

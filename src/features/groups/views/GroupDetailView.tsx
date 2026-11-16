@@ -33,9 +33,9 @@ const GroupDetailContent: React.FC = () => {
     isInAppBrowser,
     selectIdentity,
     joinAsNewMember,
-    refreshGroup,
   } = useGroupSession(groupId);
 
+  const addMember = useGroupStore((s) => s.addMember);
   const settlePairDebt = useGroupStore((s) => s.settlePairDebt);
   const deleteGroupInvoice = useGroupStore((s) => s.deleteGroupInvoice);
 
@@ -60,7 +60,7 @@ const GroupDetailContent: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
-        Đang tải dữ liệu nhóm...
+        {GROUP_DETAIL_TEXTS.LOADING_GROUP}
       </div>
     );
   }
@@ -69,13 +69,14 @@ const GroupDetailContent: React.FC = () => {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-3">
         <AlertCircle className="size-10 text-destructive" />
-        <h2 className="text-base font-extrabold">Không tìm thấy nhóm</h2>
+        <h2 className="text-base font-extrabold">
+          {GROUP_DETAIL_TEXTS.NOT_FOUND_TITLE}
+        </h2>
         <p className="text-xs text-muted-foreground">
-          Đường link có thể không chính xác hoặc nhóm chưa được đồng bộ trên
-          thiết bị này.
+          {GROUP_DETAIL_TEXTS.NOT_FOUND_DESC}
         </p>
         <Button onClick={() => router.push(ROUTES.HOME)} className="font-bold">
-          Về Trang chủ
+          {GROUP_DETAIL_TEXTS.BTN_BACK_HOME}
         </Button>
       </div>
     );
@@ -90,7 +91,7 @@ const GroupDetailContent: React.FC = () => {
             type="button"
             onClick={() => router.push(ROUTES.HOME)}
             className="size-9 rounded-xl border border-border/60 flex items-center justify-center hover:bg-muted shrink-0"
-            aria-label="Quay lại"
+            aria-label={GROUP_DETAIL_TEXTS.ARIA_BACK}
           >
             <ArrowLeft className="size-4" />
           </button>
@@ -103,8 +104,8 @@ const GroupDetailContent: React.FC = () => {
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              {group.members.length} thành viên • {group.invoices.length} hóa
-              đơn
+              {group.members.length} {GROUP_DETAIL_TEXTS.MEMBERS_UNIT} •{" "}
+              {group.invoices.length} {GROUP_DETAIL_TEXTS.INVOICES_UNIT}
             </p>
           </div>
         </div>
@@ -117,16 +118,17 @@ const GroupDetailContent: React.FC = () => {
           className="h-9 px-3 rounded-xl text-xs font-bold gap-1.5 shrink-0"
         >
           <Share2 className="size-3.5 text-primary" />
-          Mời bạn
+          {GROUP_DETAIL_TEXTS.BTN_INVITE}
         </Button>
       </header>
 
       {/* Cảnh báo nhẹ nếu mở trong Zalo / Messenger WebView */}
       {isInAppBrowser && (
         <div className="shrink-0 px-4 py-2 bg-amber-500/15 border-b border-amber-500/30 text-[11px] text-amber-700 dark:text-amber-300 font-medium">
-          Đang mở trong trình duyệt ứng dụng (Zalo/Messenger). Bấm dấu{" "}
-          <strong>•••</strong> chọn <strong>Mở bằng trình duyệt</strong> để lưu
-          nhóm lâu dài.
+          {GROUP_DETAIL_TEXTS.IN_APP_BROWSER_PART1}{" "}
+          <strong>{GROUP_DETAIL_TEXTS.IN_APP_BROWSER_DOTS}</strong> chọn{" "}
+          <strong>{GROUP_DETAIL_TEXTS.IN_APP_BROWSER_ACTION}</strong>{" "}
+          {GROUP_DETAIL_TEXTS.IN_APP_BROWSER_PART2}
         </div>
       )}
 
@@ -144,7 +146,7 @@ const GroupDetailContent: React.FC = () => {
                 />
                 <div className="min-w-0">
                   <p className="text-[11px] text-muted-foreground">
-                    Bạn đang tham gia với tên:
+                    {GROUP_DETAIL_TEXTS.CURRENT_IDENTITY_LABEL}
                   </p>
                   <p className="text-xs font-extrabold text-foreground truncate">
                     {currentMember.name}
@@ -153,7 +155,7 @@ const GroupDetailContent: React.FC = () => {
               </>
             ) : (
               <span className="text-xs text-muted-foreground">
-                Chưa chọn danh tính
+                {GROUP_DETAIL_TEXTS.NO_IDENTITY_LABEL}
               </span>
             )}
           </div>
@@ -166,11 +168,11 @@ const GroupDetailContent: React.FC = () => {
             className="h-8 px-2.5 text-xs font-bold text-primary gap-1"
           >
             <UserCheck className="size-3.5" />
-            Đổi tên
+            {GROUP_DETAIL_TEXTS.BTN_SWITCH_IDENTITY}
           </Button>
         </div>
 
-        {/* Card Đối Soát Bù Trừ Chéo */}
+        {/* Card Đối Soát Bù Trừ */}
         <GroupSettlementCard
           pairwiseDebts={pairwiseDebts}
           currentMemberId={currentMember?.id}
@@ -231,8 +233,7 @@ const GroupDetailContent: React.FC = () => {
         onOpenChange={setIsInviteOpen}
         group={group}
         onAddNewMember={async (name) => {
-          await joinAsNewMember(name);
-          await refreshGroup();
+          await addMember(group.id, name);
         }}
       />
 
@@ -264,7 +265,7 @@ export const GroupDetailView: React.FC = () => {
       <Suspense
         fallback={
           <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
-            Đang tải...
+            {GROUP_DETAIL_TEXTS.LOADING_GENERIC}
           </div>
         }
       >

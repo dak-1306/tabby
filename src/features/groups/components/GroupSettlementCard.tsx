@@ -30,7 +30,6 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
 
   const displayedList = viewMode === "mine" ? myDebts : pairwiseDebts;
 
-  // Tổng hợp ròng riêng của người đang cầm máy
   const totalToReceive = currentMemberId
     ? myDebts
         .filter((p) => p.toMember.id === currentMemberId)
@@ -50,7 +49,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
         <div className="flex items-center gap-1.5">
           <Scale className="size-4 text-primary" />
           <h2 className="text-xs font-extrabold uppercase tracking-wider text-foreground">
-            Bảng Đối Soát Bù Trừ
+            {GROUP_DETAIL_TEXTS.SETTLEMENT_BOARD_TITLE}
           </h2>
         </div>
 
@@ -87,7 +86,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
         <div className="grid grid-cols-2 gap-2">
           <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
             <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 block">
-              Bạn được nhận lại
+              {GROUP_DETAIL_TEXTS.MY_RECEIVE_LABEL}
             </span>
             <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">
               +{totalToReceive.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
@@ -95,7 +94,7 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
           </div>
           <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
             <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 block">
-              Bạn cần trả thêm
+              {GROUP_DETAIL_TEXTS.MY_PAY_LABEL}
             </span>
             <span className="text-sm font-black text-rose-600 dark:text-rose-400">
               -{totalToPay.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
@@ -125,7 +124,9 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
                     size="xs"
                   />
                   <span className="text-xs font-bold truncate max-w-[72px]">
-                    {iOweThem ? "Bạn" : pair.fromMember.name}
+                    {iOweThem
+                      ? GROUP_DETAIL_TEXTS.SELF_LABEL
+                      : pair.fromMember.name}
                   </span>
                   <ArrowRight className="size-3.5 text-muted-foreground shrink-0" />
                   <MemberAvatar
@@ -134,7 +135,9 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
                     size="xs"
                   />
                   <span className="text-xs font-bold truncate max-w-[72px]">
-                    {isOwedToMe ? "Bạn" : pair.toMember.name}
+                    {isOwedToMe
+                      ? GROUP_DETAIL_TEXTS.SELF_LABEL
+                      : pair.toMember.name}
                   </span>
                 </div>
 
@@ -162,8 +165,8 @@ export const GroupSettlementCard: React.FC<GroupSettlementCardProps> = ({
           <CheckCircle2 className="size-4 text-primary" />
           <span>
             {viewMode === "mine"
-              ? "Bạn đang sòng phẳng, không nợ hay thiếu ai!"
-              : "Cả nhóm đã thanh toán sòng phẳng!"}
+              ? GROUP_DETAIL_TEXTS.EMPTY_MY_DEBTS
+              : GROUP_DETAIL_TEXTS.EMPTY_ALL_DEBTS}
           </span>
         </div>
       )}
