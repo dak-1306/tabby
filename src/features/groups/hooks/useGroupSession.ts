@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { GroupMember } from "@/types/group";
 import { useGroupStore } from "@/stores/useGroupStore";
+import { useAppStore } from "@/stores/useAppStore";
+import { groupService } from "../services/groupService";
 
 const emptySubscribe = () => () => {};
 const getIsInAppBrowser = () =>
@@ -21,6 +23,7 @@ export const useGroupSession = (groupId: string) => {
   const syncGroupById = useGroupStore((s) => s.syncGroupById);
   const setSessionMember = useGroupStore((s) => s.setSessionMember);
   const addAndSelectMember = useGroupStore((s) => s.addAndSelectMember);
+  const currentUserId = useAppStore((s) => s.currentUserId);
 
   const isInAppBrowser = useSyncExternalStore(
     emptySubscribe,
@@ -43,14 +46,21 @@ export const useGroupSession = (groupId: string) => {
         const matched = freshGroup.members.find((m) => m.id === urlMemberId);
         if (matched) {
           setSessionMember(groupId, matched.id);
+          void groupService.linkMemberToCurrentUser(groupId, matched.id);
           router.replace(pathname);
+        }
+      } else if (freshGroup && !savedMemberId && currentUserId) {
+        const linked = freshGroup.members.find(
+          (m) => m.linkedUserId === currentUserId,
+        );
+        if (linked) {
+          setSessionMember(groupId, linked.id);
         }
       }
 
       setIsFetched(true);
     });
 
-    // Tự động đồng bộ lại khi người dùng chuyển từ Zalo/App Ngân hàng quay lại tab
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         void syncGroupById(groupId);
@@ -63,7 +73,16 @@ export const useGroupSession = (groupId: string) => {
       isCancelled = true;
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [groupId, pathname, router, setSessionMember, syncGroupById, urlMemberId]);
+  }, [
+    currentUserId,
+    groupId,
+    pathname,
+    router,
+    savedMemberId,
+    setSessionMember,
+    syncGroupById,
+    urlMemberId,
+  ]);
 
   const currentMember: GroupMember | null =
     group?.members.find((m) => m.id === (urlMemberId || savedMemberId)) ?? null;
@@ -75,13 +94,14 @@ export const useGroupSession = (groupId: string) => {
     (member: GroupMember) => {
       setSessionMember(groupId, member.id);
       setIdentityDismissed(true);
+      void groupService.linkMemberToCurrentUser(groupId, member.id);
     },
     [groupId, setSessionMember],
   );
 
   const joinAsNewMember = useCallback(
     async (name: string) => {
-      const created = await addAndSelectMember(groupId, name);
+      const created = await addAndSelectMember(groupId, name, true);
       if (created) {
         setIdentityDismissed(true);
       }

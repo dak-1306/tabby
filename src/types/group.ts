@@ -2,6 +2,7 @@ import { Invoice, Member } from "./index";
 
 export interface GroupMember extends Member {
   isCreator?: boolean;
+  linkedUserId?: string; // Gắn usr_<email> nếu thành viên có đăng nhập Google
   joinedAt: string;
 }
 

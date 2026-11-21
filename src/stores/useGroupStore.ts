@@ -10,6 +10,7 @@ import {
 } from "@/types/group";
 import { GROUP_SESSION_KEY } from "@/constants";
 import { groupService } from "@/features/groups/services/groupService";
+import { useAppStore } from "@/stores/useAppStore";
 import { Invoice } from "@/types";
 
 interface GroupStoreState {
@@ -34,6 +35,7 @@ interface GroupStoreState {
   addAndSelectMember: (
     groupId: string,
     memberName: string,
+    linkCurrentUser?: boolean,
   ) => Promise<GroupMember | null>;
 
   updateMemberName: (
@@ -100,19 +102,28 @@ export const useGroupStore = create<GroupStoreState>()(
       },
 
       syncJoinedGroups: async () => {
-        const joinedIds = Object.keys(get().sessions);
-        if (joinedIds.length === 0) {
-          set({ cachedGroups: {} });
-          return;
-        }
+        const currentSessions = get().sessions;
+        const joinedIds = Object.keys(currentSessions);
+        const currentUserId = useAppStore.getState().currentUserId;
 
         const freshList = await groupService.getGroupsByIds(joinedIds);
         const nextCache: Record<string, Group> = {};
+        const nextSessions: GroupSessionMap = { ...currentSessions };
+
         for (const g of freshList) {
           nextCache[g.id] = g;
+          // Tự động khôi phục session nếu thành viên đã gắn với tài khoản Google hiện tại
+          if (!nextSessions[g.id] && currentUserId) {
+            const linkedMember = g.members.find(
+              (m) => m.linkedUserId === currentUserId,
+            );
+            if (linkedMember) {
+              nextSessions[g.id] = linkedMember.id;
+            }
+          }
         }
 
-        set({ cachedGroups: nextCache });
+        set({ cachedGroups: nextCache, sessions: nextSessions });
       },
 
       setSessionMember: (groupId, memberId) => {
@@ -125,7 +136,11 @@ export const useGroupStore = create<GroupStoreState>()(
       },
 
       addMember: async (groupId, memberName) => {
-        const res = await groupService.addMemberToGroup(groupId, memberName);
+        const res = await groupService.addMemberToGroup(
+          groupId,
+          memberName,
+          false,
+        );
         if (!res) return null;
 
         set((state) => ({
@@ -137,8 +152,16 @@ export const useGroupStore = create<GroupStoreState>()(
         return res.member;
       },
 
-      addAndSelectMember: async (groupId, memberName) => {
-        const res = await groupService.addMemberToGroup(groupId, memberName);
+      addAndSelectMember: async (
+        groupId,
+        memberName,
+        linkCurrentUser = true,
+      ) => {
+        const res = await groupService.addMemberToGroup(
+          groupId,
+          memberName,
+          linkCurrentUser,
+        );
         if (!res) return null;
 
         set((state) => ({
