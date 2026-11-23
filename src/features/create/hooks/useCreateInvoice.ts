@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { flushSync } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +14,18 @@ import { useAppStore } from "@/stores/useAppStore";
 import { invoiceSchema, InvoiceFormData } from "@/validations";
 import { calculateMemberSplits } from "@/utils/calculations";
 import { ROUTES, TOAST_TEXTS } from "@/constants";
+
+const focusAndScrollToRow = (rowIndex: number) => {
+  const nextInput = document.getElementById(
+    `item-name-input-${rowIndex}`,
+  ) as HTMLInputElement | null;
+  const nextRowEl = document.getElementById(`item-row-${rowIndex}`);
+
+  if (nextInput) {
+    nextInput.focus({ preventScroll: true });
+    nextRowEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+};
 
 export const useCreateInvoice = () => {
   const router = useRouter();
@@ -78,7 +91,6 @@ export const useCreateInvoice = () => {
     name: "items",
   });
 
-  // Snapshot state luôn tạo tham chiếu mới để React 19 Compiler cập nhật LiveReceiptPreview tức thì
   const [liveSnapshot, setLiveSnapshot] = useState<{
     title: string;
     selectedMemberIds: string[];
@@ -141,7 +153,6 @@ export const useCreateInvoice = () => {
     }
   }, [currentUserId, existingInvoice, form, initialItems, initialMemberIds]);
 
-  // Đồng bộ lại ID nếu store vừa chuyển từ "m1" sang ID Google ("usr_...")
   useEffect(() => {
     if (isEditMode) return;
     const validMemberIds = new Set(members.map((m) => m.id));
@@ -188,6 +199,14 @@ export const useCreateInvoice = () => {
     form.setValue("selectedMemberIds", updated, { shouldDirty: true });
   };
 
+  const handleToggleSelectAllMembers = () => {
+    const current = form.getValues("selectedMemberIds");
+    const isAll =
+      members.length > 0 && members.every((m) => current.includes(m.id));
+    const nextIds = isAll ? [] : members.map((m) => m.id);
+    form.setValue("selectedMemberIds", nextIds, { shouldDirty: true });
+  };
+
   const handleAddNewMember = (name: string) => {
     const newM = { id: `m_${Date.now()}`, name, avatar: name[0].toUpperCase() };
     addMember(newM);
@@ -198,14 +217,32 @@ export const useCreateInvoice = () => {
   };
 
   const handleAddItem = () => {
+    const nextIndex = form.getValues("items").length;
     const activeMemberIds = form.getValues("selectedMemberIds");
-    append({
-      id: `item_${Date.now()}`,
-      name: "",
-      price: 0,
-      assignedMemberIds:
-        activeMemberIds.length > 0 ? [...activeMemberIds] : [currentUserId],
+
+    flushSync(() => {
+      append({
+        id: `item_${Date.now()}`,
+        name: "",
+        price: 0,
+        assignedMemberIds:
+          activeMemberIds.length > 0 ? [...activeMemberIds] : [currentUserId],
+      });
     });
+
+    focusAndScrollToRow(nextIndex);
+  };
+
+  const handleNextRow = (currentIndex: number) => {
+    const currentItems = form.getValues("items");
+    const nextIndex = currentIndex + 1;
+
+    if (nextIndex < currentItems.length) {
+      focusAndScrollToRow(nextIndex);
+      return;
+    }
+
+    handleAddItem();
   };
 
   const handleSubmit = (e?: BaseSyntheticEvent) =>
@@ -231,28 +268,6 @@ export const useCreateInvoice = () => {
       router.push(ROUTES.HOME);
     })(e);
 
-  const handleNextRow = (currentIndex: number) => {
-    const currentItems = form.getValues("items");
-    const nextIndex = currentIndex + 1;
-
-    if (nextIndex < currentItems.length) {
-      const nextInput = document.getElementById(`item-name-input-${nextIndex}`);
-      if (nextInput) {
-        nextInput.focus();
-        return;
-      }
-    }
-
-    handleAddItem();
-
-    setTimeout(() => {
-      const nextInput = document.getElementById(`item-name-input-${nextIndex}`);
-      if (nextInput) {
-        nextInput.focus();
-      }
-    }, 50);
-  };
-
   return {
     form,
     title: liveSnapshot.title,
@@ -264,6 +279,7 @@ export const useCreateInvoice = () => {
     selectedMembers,
     breakdowns,
     handleToggleMember,
+    handleToggleSelectAllMembers,
     handleAddNewMember,
     handleUpdateMember: updateMember,
     handleAddItem,

@@ -123,10 +123,23 @@ const GroupInvoiceFormInner: React.FC<InnerFormProps> = ({
             {CREATE_TEXTS.TITLE_LABEL}
           </label>
           <Input
+            enterKeyHint="next"
             {...register("title")}
             placeholder={CREATE_TEXTS.TITLE_PLACEHOLDER}
             className="font-bold"
             aria-invalid={Boolean(errors.title)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const firstInput = document.getElementById(
+                  "item-name-input-0",
+                ) as HTMLInputElement | null;
+                firstInput?.focus({ preventScroll: true });
+                document
+                  .getElementById("item-row-0")
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }
+            }}
           />
           {errors.title && (
             <p className="text-[11px] text-destructive font-medium">
@@ -161,6 +174,7 @@ const GroupInvoiceFormInner: React.FC<InnerFormProps> = ({
           ))}
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={handleAddItem}
             className="w-full py-3 border border-dashed border-primary/50 text-primary text-xs font-bold rounded-xl hover:bg-primary/10 min-h-[44px] flex items-center justify-center gap-1.5 transition-colors"
           >

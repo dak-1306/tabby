@@ -27,7 +27,7 @@ export const HostSummaryCard: React.FC<HostSummaryCardProps> = ({
     <Card
       clickable
       onClick={onClick}
-      className="p-3 bg-card border border-border/70 border-l-4 border-l-primary hover:border-primary/80 transition-all flex items-center justify-between gap-2.5 shadow-xs rounded-xl"
+      className="shrink-0 p-3 bg-card border border-border/70 border-l-4 border-l-primary hover:border-primary/80 transition-all flex items-center justify-between gap-2.5 shadow-xs rounded-xl"
     >
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         <MemberAvatar
@@ -37,10 +37,10 @@ export const HostSummaryCard: React.FC<HostSummaryCardProps> = ({
         />
 
         <div className="min-w-0 flex-1">
-          <h3 className="text-xs font-bold text-foreground truncate leading-tight">
+          <h3 className="text-xs font-bold text-foreground truncate leading-snug">
             {hostName}
           </h3>
-          <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+          <p className="text-[10px] text-muted-foreground truncate mt-0.5 leading-snug">
             {LEDGER_PAGE_TEXTS.HOST_CARD_SUBTITLE}
           </p>
         </div>
@@ -48,10 +48,10 @@ export const HostSummaryCard: React.FC<HostSummaryCardProps> = ({
 
       <div className="flex items-center gap-1.5 shrink-0 pl-2.5 border-l border-border/40">
         <div className="text-right">
-          <span className="text-[9px] text-muted-foreground block font-medium uppercase tracking-wider whitespace-nowrap">
+          <span className="text-[9px] text-muted-foreground block font-medium uppercase tracking-wider whitespace-nowrap leading-snug">
             {LEDGER_PAGE_TEXTS.HOST_CARD_AMOUNT_LABEL}
           </span>
-          <span className="text-xs font-extrabold text-primary whitespace-nowrap">
+          <span className="text-xs font-extrabold text-primary whitespace-nowrap leading-snug block mt-0.5">
             {totalHostExpense.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
           </span>
         </div>

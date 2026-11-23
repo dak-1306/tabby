@@ -27,6 +27,7 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
   onRemove,
   onNextRow,
 }) => {
+  const rowRef = useRef<HTMLDivElement>(null);
   const priceInputRef = useRef<HTMLInputElement>(null);
   const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [draftPriceText, setDraftPriceText] = useState("");
@@ -89,7 +90,7 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
 
   const addQuickPrice = (amount: number) => {
     const nextPrice = currentPrice + amount;
-    setIsEditingPrice(false);
+    setDraftPriceText(String(nextPrice));
     setValue(`items.${index}.price`, nextPrice, {
       shouldDirty: true,
       shouldValidate: true,
@@ -101,25 +102,44 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
       shouldDirty: true,
       shouldValidate: true,
     });
-    priceInputRef.current?.focus();
+    priceInputRef.current?.focus({ preventScroll: true });
+    rowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
+  const triggerNextRow = () => {
+    if (isEditingPrice) {
+      commitPriceOnBlur(draftPriceText);
+    }
+    onNextRow?.();
   };
 
   const itemError = errors.items?.[index];
   const priceFieldRegistration = register(`items.${index}.price`);
 
   return (
-    <div className="p-3.5 bg-card border border-border/70 rounded-2xl space-y-3 shadow-xs">
+    <div
+      ref={rowRef}
+      id={`item-row-${index}`}
+      className="p-3.5 bg-card border border-border/70 rounded-2xl space-y-3 shadow-xs scroll-my-24"
+    >
       <div className="flex items-center gap-2">
         <Input
           id={`item-name-input-${index}`}
+          enterKeyHint="next"
           {...register(`items.${index}.name`)}
           placeholder={CREATE_TEXTS.ITEM_NAME_PLACEHOLDER}
           className="flex-1 font-medium"
           aria-invalid={Boolean(itemError?.name)}
+          onFocus={() => {
+            rowRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              priceInputRef.current?.focus();
+              priceInputRef.current?.focus({ preventScroll: true });
             }
           }}
         />
@@ -128,13 +148,18 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
           <Input
             type="text"
             inputMode="decimal"
-            placeholder="Giá (10k...)"
+            enterKeyHint="next"
+            placeholder={CREATE_TEXTS.ITEM_PRICE_PLACEHOLDER}
             name={priceFieldRegistration.name}
             value={displayedPriceValue}
             onFocus={(e) => {
               setDraftPriceText(currentPrice === 0 ? "" : String(currentPrice));
               setIsEditingPrice(true);
               e.target.select();
+              rowRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
             }}
             onChange={(e) => handlePriceChange(e.target.value)}
             onBlur={(e) => {
@@ -160,19 +185,22 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
           type="button"
           onClick={onRemove}
           className="size-11 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex items-center justify-center shrink-0"
-          aria-label="Xóa món"
+          aria-label={CREATE_TEXTS.ARIA_REMOVE_ITEM}
         >
           <Trash2 className="size-4" />
         </button>
       </div>
 
-      <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1 scrollbar-none text-[11px]">
+      <div className="flex items-center justify-between gap-1.5 overflow-x-auto pb-1 scrollbar-none text-[11px]">
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-muted-foreground font-medium mr-1">Gợi ý:</span>
+          <span className="text-muted-foreground font-medium mr-0.5">
+            {CREATE_TEXTS.QUICK_SUGGEST_LABEL}
+          </span>
           {QUICK_DISHES.map((dish) => (
             <button
               key={dish}
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => setQuickDish(dish)}
               className="px-2 py-0.5 rounded-md bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors font-medium min-h-[28px]"
             >
@@ -181,9 +209,10 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
           ))}
         </div>
 
-        <div className="flex items-center gap-1 shrink-0 ml-2">
+        <div className="flex items-center gap-1 shrink-0 ml-1">
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => addQuickPrice(10000)}
             className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-bold hover:bg-primary/20 min-h-[28px]"
           >
@@ -191,17 +220,29 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
           </button>
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => addQuickPrice(50000)}
             className="px-1.5 py-0.5 rounded-md bg-primary/10 text-primary font-bold hover:bg-primary/20 min-h-[28px]"
           >
             +50k
           </button>
+          {onNextRow && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={triggerNextRow}
+              aria-label={CREATE_TEXTS.ARIA_NEXT_ITEM}
+              className="px-2 py-0.5 rounded-md bg-primary text-primary-foreground font-bold hover:opacity-90 min-h-[28px] active:scale-95"
+            >
+              {CREATE_TEXTS.BTN_NEXT_ITEM_SHORT}
+            </button>
+          )}
         </div>
       </div>
 
       <div className="space-y-1.5 pt-1 border-t border-border/40">
         <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
-          <span>Người chia món này:</span>
+          <span>{CREATE_TEXTS.ITEM_ASSIGNED_LABEL}</span>
           <button
             type="button"
             onClick={handleToggleSelectAll}
@@ -209,8 +250,8 @@ export const ItemInputRow: React.FC<ItemInputRowProps> = ({
           >
             <Users className="size-3" />
             {assignedIds.length === members.length
-              ? "Bỏ chọn hết"
-              : "Chọn tất cả"}
+              ? CREATE_TEXTS.DESELECT_ALL_ITEMS_MEMBERS
+              : CREATE_TEXTS.SELECT_ALL}
           </button>
         </div>
 
