@@ -72,32 +72,38 @@ export const useAppStore = create<AppState>()(
           }),
         })),
 
-      clearMemberDebt: (memberId) =>
-        set((state) => ({
-          invoices: state.invoices.map((inv) => {
-            if (inv.paidByMemberId !== state.currentUserId) return inv;
-            if (inv.status === "completed") return inv;
+      // Hỗ trợ gạch nợ toàn bộ hoặc gạch nợ từng phần theo danh sách invoiceIds
+      clearMemberDebt: (memberId, invoiceIds) =>
+        set((state) => {
+          const targetSet =
+            invoiceIds && invoiceIds.length > 0 ? new Set(invoiceIds) : null;
 
-            const participants = getInvoiceParticipantIds(inv);
-            if (!participants.includes(memberId)) return inv;
+          return {
+            invoices: state.invoices.map((inv) => {
+              if (inv.paidByMemberId !== state.currentUserId) return inv;
+              if (inv.status === "completed") return inv;
+              if (targetSet && !targetSet.has(inv.id)) return inv;
 
-            const currentPaidIds = inv.paidMemberIds ?? [];
-            if (currentPaidIds.includes(memberId)) return inv;
+              const participants = getInvoiceParticipantIds(inv);
+              if (!participants.includes(memberId)) return inv;
 
-            // Giữ nguyên assignedMemberIds trên từng món, chỉ ghi nhận memberId đã trả nợ
-            const nextPaidIds = [...currentPaidIds, memberId];
-            const remainingUnpaidOthers = participants.some(
-              (id) =>
-                id !== state.currentUserId && !nextPaidIds.includes(id),
-            );
+              const currentPaidIds = inv.paidMemberIds ?? [];
+              if (currentPaidIds.includes(memberId)) return inv;
 
-            return {
-              ...inv,
-              paidMemberIds: nextPaidIds,
-              status: remainingUnpaidOthers ? "partial" : "completed",
-            };
-          }),
-        })),
+              // Giữ nguyên danh sách chia món, chỉ đánh dấu memberId đã trả nợ
+              const nextPaidIds = [...currentPaidIds, memberId];
+              const remainingUnpaidOthers = participants.some(
+                (id) => id !== state.currentUserId && !nextPaidIds.includes(id),
+              );
+
+              return {
+                ...inv,
+                paidMemberIds: nextPaidIds,
+                status: remainingUnpaidOthers ? "partial" : "completed",
+              };
+            }),
+          };
+        }),
 
       addMember: (member) =>
         set((state) => ({ members: [...state.members, member] })),
@@ -136,8 +142,7 @@ export const useAppStore = create<AppState>()(
                       ...m,
                       name: profile.name!,
                       avatar:
-                        profile.avatar ||
-                        profile.name!.charAt(0).toUpperCase(),
+                        profile.avatar || profile.name!.charAt(0).toUpperCase(),
                     }
                   : m,
               ),

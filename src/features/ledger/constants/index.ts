@@ -10,4 +10,7 @@ export const LEDGER_PAGE_TEXTS = {
   SETTLED_STATUS_LABEL: "Đã sòng phẳng",
   ACTION_DEMAND: "Nhấn để xem chi tiết",
   SETTLED_BADGE_LABEL: "Đã trả hết",
+  HOST_DEFAULT_NAME: "Bạn (Host)",
+  HOST_CARD_SUBTITLE: "Chi tiêu cá nhân",
+  HOST_CARD_AMOUNT_LABEL: "Phần của bạn",
 } as const;

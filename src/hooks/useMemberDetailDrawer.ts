@@ -14,6 +14,7 @@ export const useMemberDetailDrawer = (
   onClose: () => void,
 ) => {
   const [expandedBillIds, setExpandedBillIds] = useState<string[]>([]);
+  const [selectedBillIds, setSelectedBillIds] = useState<string[]>([]);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState("");
 
@@ -71,12 +72,51 @@ export const useMemberDetailDrawer = (
       });
   }, [invoices, currentUserId, member]);
 
+  // Chỉ giữ lại các ID hóa đơn vẫn đang nằm trong danh sách chưa trả nợ
+  const validSelectedBillIds = useMemo(() => {
+    const unpaidIdSet = new Set(unpaidInvoicesWithDetails.map((b) => b.id));
+    return selectedBillIds.filter((id) => unpaidIdSet.has(id));
+  }, [selectedBillIds, unpaidInvoicesWithDetails]);
+
+  const isPartialSelection =
+    validSelectedBillIds.length > 0 &&
+    validSelectedBillIds.length < unpaidInvoicesWithDetails.length;
+
+  const targetBills = useMemo(() => {
+    if (validSelectedBillIds.length === 0) return unpaidInvoicesWithDetails;
+    const selectedSet = new Set(validSelectedBillIds);
+    return unpaidInvoicesWithDetails.filter((b) => selectedSet.has(b.id));
+  }, [unpaidInvoicesWithDetails, validSelectedBillIds]);
+
+  const targetAmount = useMemo(
+    () => targetBills.reduce((sum, b) => sum + b.amountOwedForBill, 0),
+    [targetBills],
+  );
+
   const toggleExpand = (billId: string) => {
     setExpandedBillIds((prev) =>
       prev.includes(billId)
         ? prev.filter((id) => id !== billId)
         : [...prev, billId],
     );
+  };
+
+  const toggleSelectBill = (billId: string) => {
+    setSelectedBillIds((prev) => {
+      const unpaidIdSet = new Set(unpaidInvoicesWithDetails.map((b) => b.id));
+      const cleanPrev = prev.filter((id) => unpaidIdSet.has(id));
+      return cleanPrev.includes(billId)
+        ? cleanPrev.filter((id) => id !== billId)
+        : [...cleanPrev, billId];
+    });
+  };
+
+  const toggleSelectAllBills = () => {
+    if (validSelectedBillIds.length === unpaidInvoicesWithDetails.length) {
+      setSelectedBillIds([]);
+    } else {
+      setSelectedBillIds(unpaidInvoicesWithDetails.map((b) => b.id));
+    }
   };
 
   const handleStartEdit = () => {
@@ -95,9 +135,14 @@ export const useMemberDetailDrawer = (
 
   const handleCopyText = (isDetailed: boolean) => {
     if (!member) return;
+    const summaryForCopy: MemberDebtSummary = {
+      ...member,
+      totalOwed: targetAmount,
+      unpaidBillsCount: targetBills.length,
+    };
     const text = formatMemberDemandShareText(
-      member,
-      unpaidInvoicesWithDetails,
+      summaryForCopy,
+      targetBills,
       currentUser,
       isDetailed,
     );
@@ -107,9 +152,22 @@ export const useMemberDetailDrawer = (
 
   const handleClearDebt = () => {
     if (!member) return;
-    clearMemberDebt(member.memberId);
-    toast.success(TOAST_TEXTS.CLEAR_DEBT_SUCCESS);
-    onClose();
+    const isClearingAll =
+      validSelectedBillIds.length === 0 ||
+      validSelectedBillIds.length === unpaidInvoicesWithDetails.length;
+
+    clearMemberDebt(
+      member.memberId,
+      isClearingAll ? undefined : validSelectedBillIds,
+    );
+    setSelectedBillIds([]);
+
+    if (isClearingAll) {
+      toast.success(TOAST_TEXTS.CLEAR_DEBT_SUCCESS);
+      onClose();
+    } else {
+      toast.success(TOAST_TEXTS.CLEAR_PARTIAL_DEBT_SUCCESS);
+    }
   };
 
   const handleDeleteMember = () => {
@@ -123,10 +181,16 @@ export const useMemberDetailDrawer = (
     currentUser,
     unpaidInvoicesWithDetails,
     expandedBillIds,
+    validSelectedBillIds,
+    isPartialSelection,
+    targetBillsCount: targetBills.length,
+    targetAmount,
     isEditingName,
     editName,
     setEditName,
     toggleExpand,
+    toggleSelectBill,
+    toggleSelectAllBills,
     handleStartEdit,
     handleSaveName,
     handleCopyText,
