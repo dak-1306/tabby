@@ -22,6 +22,7 @@ import {
   INVOICE_STATUS,
 } from "@/constants";
 import { useInvoiceDetailDrawer } from "@/hooks/useInvoiceDetailDrawer";
+import { cn } from "@/utils/utils";
 
 interface InvoiceDetailDrawerProps {
   invoice: FormattedRecentInvoice | null;
@@ -43,6 +44,10 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
 
   if (!invoice) return null;
 
+  const paidMemberSet = new Set(fullInvoice?.paidMemberIds ?? []);
+  const isBillCompleted =
+    (fullInvoice?.status ?? invoice.status) === INVOICE_STATUS.COMPLETED;
+
   return (
     <Drawer open={Boolean(invoice)} onOpenChange={(open) => !open && onClose()}>
       <DrawerContent>
@@ -51,7 +56,8 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
             {invoice.title}
           </DrawerTitle>
           <DrawerDescription className="text-xs text-muted-foreground mt-0.5">
-            Ngày: {invoice.date} • Tổng:{" "}
+            {DRAWER_TEXTS.INVOICE_DATE_PREFIX} {invoice.date}{" "}
+            {DRAWER_TEXTS.INVOICE_TOTAL_PREFIX}{" "}
             <span className="font-bold text-foreground">
               {invoice.totalAmount.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
             </span>
@@ -66,7 +72,7 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
             {fullInvoice?.items.map((item) => (
               <div
                 key={item.id}
-                className="p-2.5 rounded-xl bg-card border border-border/60 space-y-1 text-xs"
+                className="p-2.5 rounded-xl bg-card border border-border/60 space-y-1.5 text-xs"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-foreground">
@@ -76,17 +82,36 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
                     {item.price.toLocaleString(LOCALE_VI)} {CURRENCY_SYMBOL}
                   </span>
                 </div>
-                <div className="flex items-center gap-1 pt-1">
+                <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                   {item.assignedMemberIds.map((mId) => {
                     const m = members.find((mem) => mem.id === mId);
                     if (!m) return null;
+                    const isPaid =
+                      mId !== fullInvoice.paidByMemberId &&
+                      (isBillCompleted || paidMemberSet.has(mId));
+
                     return (
-                      <MemberAvatar
+                      <span
                         key={mId}
-                        name={m.name}
-                        fallbackText={m.avatar}
-                        size="xs"
-                      />
+                        className={cn(
+                          "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] font-semibold",
+                          isPaid
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
+                            : "bg-background border-border/60 text-foreground",
+                        )}
+                      >
+                        <MemberAvatar
+                          name={m.name}
+                          fallbackText={m.avatar}
+                          size="xs"
+                        />
+                        <span>{m.name}</span>
+                        {isPaid && (
+                          <span className="text-[9px] font-bold">
+                            ({DRAWER_TEXTS.PAID_BADGE_LABEL})
+                          </span>
+                        )}
+                      </span>
                     );
                   })}
                 </div>
@@ -97,6 +122,7 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
 
         <DrawerFooter className="flex-col gap-2 pt-3">
           <Button
+            type="button"
             size="lg"
             className="w-full gap-2 min-h-[44px]"
             onClick={handleCopySummary}
@@ -106,6 +132,7 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
           </Button>
 
           <Button
+            type="button"
             variant="outline"
             size="lg"
             className="w-full gap-2 min-h-[44px]"
@@ -115,17 +142,19 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
             {DRAWER_TEXTS.BTN_EDIT_INVOICE}
           </Button>
 
-          {invoice.status !== INVOICE_STATUS.COMPLETED && (
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full gap-2 min-h-[44px]"
-              onClick={handleMarkCompleted}
-            >
-              <CheckCircle2 className="size-4 text-primary" />
-              {DRAWER_TEXTS.BTN_MARK_COMPLETED}
-            </Button>
-          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={isBillCompleted}
+            className="w-full gap-2 min-h-[44px]"
+            onClick={handleMarkCompleted}
+          >
+            <CheckCircle2 className="size-4 text-primary" />
+            {isBillCompleted
+              ? DRAWER_TEXTS.BTN_ALREADY_COMPLETED
+              : DRAWER_TEXTS.BTN_MARK_COMPLETED}
+          </Button>
 
           <InlineConfirmButton
             buttonText={DRAWER_TEXTS.BTN_DELETE_INVOICE}
@@ -138,6 +167,7 @@ export const InvoiceDetailDrawer: React.FC<InvoiceDetailDrawerProps> = ({
           <DrawerClose
             render={
               <Button
+                type="button"
                 variant="ghost"
                 className="w-full min-h-[44px]"
                 onClick={onClose}

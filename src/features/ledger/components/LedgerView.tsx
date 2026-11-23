@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useLedgerFilter } from "../hooks/useLedgerFilter";
@@ -10,7 +10,6 @@ import { LedgerGrid } from "./LedgerGrid";
 import { HostSummaryCard } from "./HostSummaryCard";
 import { MemberDetailDrawer } from "@/components/common/MemberDetailDrawer";
 import { HostDetailDrawer } from "@/components/common/HostDetailDrawer";
-import { LedgerMemberSummary } from "../types";
 
 export const LedgerView: React.FC = () => {
   const {
@@ -18,14 +17,21 @@ export const LedgerView: React.FC = () => {
     setSearchQuery,
     activeTab,
     setActiveTab,
+    ledgerMembers,
     filteredMembers,
     stats,
   } = useLedgerFilter();
 
-  const [selectedMember, setSelectedMember] =
-    useState<LedgerMemberSummary | null>(null);
-
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [isHostDrawerOpen, setIsHostDrawerOpen] = useState(false);
+
+  const selectedMember = useMemo(
+    () =>
+      selectedMemberId
+        ? (ledgerMembers.find((m) => m.memberId === selectedMemberId) ?? null)
+        : null,
+    [ledgerMembers, selectedMemberId],
+  );
 
   return (
     <div className="flex flex-col h-full w-full bg-background text-foreground relative overflow-hidden">
@@ -49,14 +55,14 @@ export const LedgerView: React.FC = () => {
         {/* Danh sách thành viên */}
         <LedgerGrid
           members={filteredMembers}
-          onSelectMember={(member) => setSelectedMember(member)}
+          onSelectMember={(member) => setSelectedMemberId(member.memberId)}
         />
       </main>
 
       {/* Drawer chi tiết của Thành viên khác */}
       <MemberDetailDrawer
         member={selectedMember}
-        onClose={() => setSelectedMember(null)}
+        onClose={() => setSelectedMemberId(null)}
       />
 
       {/* Drawer chi tiết chi tiêu cá nhân của Host */}

@@ -22,6 +22,7 @@ export interface Invoice {
   createdAt: string;
   status: InvoiceStatus;
   items: InvoiceItem[];
+  paidMemberIds?: string[]; // Danh sách thành viên đã thanh toán (gạch nợ) phần của mình trong bill này
 }
 
 export interface MemberDebtSummary {

@@ -25,6 +25,8 @@ export const formatInvoiceGroupShareText = (
 ): string => {
   const totalAmount = invoice.items.reduce((sum, item) => sum + item.price, 0);
   const dateStr = new Date(invoice.createdAt).toLocaleDateString(LOCALE_VI);
+  const payer =
+    currentUser || members.find((m) => m.id === invoice.paidByMemberId);
 
   const memberTotals = new Map<string, number>();
   invoice.items.forEach((item) => {
@@ -54,11 +56,13 @@ export const formatInvoiceGroupShareText = (
     })
     .join("\n");
 
-  const bankInfoText = currentUser?.accountNumber
-    ? `\n\nThông tin chuyển khoản (${currentUser.name}):\n- STK: ${currentUser.accountNumber}\n- Ngân hàng: ${currentUser.bankName || "Chưa cập nhật"}`
+  const payerLine = payer ? `\nNgười thanh toán: ${payer.name}` : "";
+
+  const bankInfoText = payer?.accountNumber
+    ? `\n\nThông tin chuyển khoản (${payer.name}):\n- STK: ${payer.accountNumber}\n- Ngân hàng: ${payer.bankName || "Chưa cập nhật"}`
     : "";
 
-  return `Chi tiết hóa đơn: ${invoice.title}\nNgày: ${dateStr}\nTổng tiền: ${totalAmount.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}\n\nDanh sách món:\n${itemsListText}\n\nPhần tiền từng người:\n${splitBreakdownText}${bankInfoText}`;
+  return `Chi tiết hóa đơn: ${invoice.title}\nNgày: ${dateStr}${payerLine}\nTổng tiền: ${totalAmount.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}\n\nDanh sách món:\n${itemsListText}\n\nPhần tiền từng người:\n${splitBreakdownText}${bankInfoText}`;
 };
 
 // 2. Đòi nợ CÁ NHÂN (Thành viên khác)
@@ -100,7 +104,7 @@ export const formatMemberDemandShareText = (
   return `Gửi ${member.memberName} chi tiết các bill nhóm:\n\n${detailedList}\n\nTỔNG CỘNG CẦN CHUYỂN: ${member.totalOwed.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}${bankInfoText}`;
 };
 
-// 3. Tóm tắt Chi tiêu cá nhân của HOST (Mới)
+// 3. Tóm tắt Chi tiêu cá nhân của HOST
 export const formatHostExpenseShareText = (
   hostName: string,
   hostUnpaidBills: DetailedUnpaidBill[],

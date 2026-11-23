@@ -15,26 +15,25 @@ export interface PairLedgerEntry {
   type: "bill" | "settlement";
   title: string;
   date: string;
-  fromMemberId: string; // Người phát sinh nợ / người đã trả
-  toMemberId: string; // Người trả hộ / người nhận
+  fromMemberId: string;
+  toMemberId: string;
   amount: number;
   items?: PairBillItemDetail[];
 }
 
 export interface PairwiseDebt {
   pairKey: string;
-  fromMember: GroupMember; // Người đang thiếu tiền
-  toMember: GroupMember; // Người được nhận tiền
-  netAmount: number; // Đã bù trừ chéo và làm tròn 1.000đ
+  fromMember: GroupMember;
+  toMember: GroupMember;
+  netAmount: number;
   entries: PairLedgerEntry[];
 }
 
-// Tính phần tiền 1 thành viên phải chịu trong 1 bill cụ thể
 export const getMemberShareInInvoice = (
   invoice: Invoice,
   memberId: string,
 ): number => {
-  return invoice.items
+  return (invoice.items ?? [])
     .filter((item) => item.assignedMemberIds.includes(memberId))
     .reduce(
       (sum, item) =>
@@ -43,13 +42,13 @@ export const getMemberShareInInvoice = (
     );
 };
 
-// Tính toàn bộ các cặp nợ sau khi bù trừ chéo (Pairwise Netting) & trừ các lần đã chốt nợ
 export const calculateGroupPairwiseDebts = (group: Group): PairwiseDebt[] => {
-  const memberMap = new Map<string, GroupMember>(
-    group.members.map((m) => [m.id, m]),
-  );
+  const members = group.members ?? [];
+  const invoices = group.invoices ?? [];
+  const settlements = group.settlements ?? [];
 
-  // Lưu lịch sử phát sinh theo từng cặp không phân biệt thứ tự (idA < idB)
+  const memberMap = new Map<string, GroupMember>(members.map((m) => [m.id, m]));
+
   const pairEntriesMap = new Map<string, PairLedgerEntry[]>();
   const getPairKey = (a: string, b: string) =>
     a < b ? `${a}__${b}` : `${b}__${a}`;
@@ -61,15 +60,14 @@ export const calculateGroupPairwiseDebts = (group: Group): PairwiseDebt[] => {
     pairEntriesMap.set(key, list);
   };
 
-  // 1. Duyệt toàn bộ hóa đơn để ghi nhận từng khoản trả hộ
-  for (const inv of group.invoices) {
+  // 1. Duyệt toàn bộ hóa đơn (danh sách chia món luôn giữ nguyên cố định)
+  for (const inv of invoices) {
     const payerId = inv.paidByMemberId;
     if (!memberMap.has(payerId)) continue;
 
-    // Gom theo từng người ăn trong hóa đơn này
     const consumerItemsMap = new Map<string, PairBillItemDetail[]>();
 
-    for (const item of inv.items) {
+    for (const item of inv.items ?? []) {
       if (item.price <= 0 || item.assignedMemberIds.length === 0) continue;
       const share = calculateItemShare(
         item.price,
@@ -106,8 +104,8 @@ export const calculateGroupPairwiseDebts = (group: Group): PairwiseDebt[] => {
     });
   }
 
-  // 2. Duyệt các giao dịch đã chốt nợ (Settlements)
-  for (const stl of group.settlements) {
+  // 2. Duyệt các giao dịch đã chốt nợ (Settlements) độc lập theo từng cặp
+  for (const stl of settlements) {
     if (!memberMap.has(stl.fromMemberId) || !memberMap.has(stl.toMemberId)) {
       continue;
     }
@@ -125,16 +123,14 @@ export const calculateGroupPairwiseDebts = (group: Group): PairwiseDebt[] => {
   // 3. Bù trừ chéo cho từng cặp thành viên
   const results: PairwiseDebt[] = [];
 
-  for (let i = 0; i < group.members.length; i++) {
-    for (let j = i + 1; j < group.members.length; j++) {
-      const mA = group.members[i];
-      const mB = group.members[j];
+  for (let i = 0; i < members.length; i++) {
+    for (let j = i + 1; j < members.length; j++) {
+      const mA = members[i];
+      const mB = members[j];
       const key = getPairKey(mA.id, mB.id);
       const entries = pairEntriesMap.get(key) || [];
       if (entries.length === 0) continue;
 
-      // Tính số dư ròng chiều B nợ A:
-      // + (Bill A trả hộ B) - (Bill B trả hộ A) - (B đã chốt nợ cho A) + (A đã chốt nợ cho B)
       let netBtoA = 0;
       for (const e of entries) {
         if (e.type === "bill") {
@@ -182,19 +178,46 @@ export const calculateGroupPairwiseDebts = (group: Group): PairwiseDebt[] => {
   return results.sort((a, b) => b.netAmount - a.netAmount);
 };
 
-// Format tin nhắn đối soát gửi qua Zalo/Messenger
+// Format tin nhắn đối soát gửi qua Zalo/Messenger (Hỗ trợ cả bản Chi tiết từng món & Tóm tắt)
 export const formatPairSettlementShareText = (
   groupName: string,
   pair: PairwiseDebt,
+  isDetailed = true,
 ): string => {
+  const bankInfoText = pair.toMember.accountNumber
+    ? `\n\nThông tin chuyển khoản:\n- STK: ${pair.toMember.accountNumber}\n- Ngân hàng: ${pair.toMember.bankName || "Chưa cập nhật"}\n- Chủ TK: ${pair.toMember.name}`
+    : "";
+
   const lines = pair.entries.map((e) => {
     const dateStr = new Date(e.date).toLocaleDateString(LOCALE_VI);
+
     if (e.type === "settlement") {
       return `• [Đã trả] ${dateStr}: -${e.amount.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}`;
     }
-    const sign = e.fromMemberId === pair.fromMember.id ? "+" : "-";
-    return `• ${e.title} (${dateStr}): ${sign}${e.amount.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}`;
+
+    const isPositive = e.fromMemberId === pair.fromMember.id;
+    const sign = isPositive ? "+" : "-";
+    const payerNote = isPositive
+      ? `${pair.toMember.name} trả hộ`
+      : `${pair.fromMember.name} trả hộ`;
+
+    const headerLine = `• ${e.title} (${dateStr} - ${payerNote}): ${sign}${e.amount.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}`;
+
+    if (!isDetailed || !e.items || e.items.length === 0) {
+      return headerLine;
+    }
+
+    const itemsText = e.items
+      .map(
+        (item) =>
+          `  + ${item.name}: ${item.totalPrice.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL} (chia ${item.splitCount} -> ${sign}${item.memberShare.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL})`,
+      )
+      .join("\n");
+
+    return `${headerLine}\n${itemsText}`;
   });
 
-  return `Đối soát nhóm "${groupName}" (${pair.fromMember.name} ↔ ${pair.toMember.name}):\n\n${lines.join("\n")}\n\nCHỐT LẠI: ${pair.fromMember.name} gửi ${pair.toMember.name} ${pair.netAmount.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}`;
+  const separator = isDetailed ? "\n\n" : "\n";
+
+  return `Đối soát nhóm "${groupName}" (${pair.fromMember.name} ↔ ${pair.toMember.name}):\n\n${lines.join(separator)}\n\nCHỐT LẠI: ${pair.fromMember.name} gửi ${pair.toMember.name} ${pair.netAmount.toLocaleString(LOCALE_VI)} ${CURRENCY_SYMBOL}${bankInfoText}`;
 };

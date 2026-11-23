@@ -19,26 +19,30 @@ export const useLedgerFilter = () => {
     invoices.forEach((inv) => {
       if (inv.paidByMemberId !== currentUserId) return;
 
+      const isBillCompleted = inv.status === INVOICE_STATUS.COMPLETED;
+      if (isBillCompleted) return;
+
+      const paidSet = new Set(inv.paidMemberIds ?? []);
+
       inv.items.forEach((item) => {
         if (item.assignedMemberIds.length === 0) return;
+
+        // Luôn chia theo tổng số người tham gia món ban đầu
         const share = calculateItemShare(
           item.price,
           item.assignedMemberIds.length,
         );
 
         item.assignedMemberIds.forEach((mId) => {
-          if (
-            mId !== currentUserId &&
-            inv.status !== INVOICE_STATUS.COMPLETED
-          ) {
-            const current = debtMap.get(mId) || {
-              total: 0,
-              billIds: new Set(),
-            };
-            current.total += share;
-            current.billIds.add(inv.id);
-            debtMap.set(mId, current);
-          }
+          if (mId === currentUserId || paidSet.has(mId)) return;
+
+          const current = debtMap.get(mId) || {
+            total: 0,
+            billIds: new Set(),
+          };
+          current.total += share;
+          current.billIds.add(inv.id);
+          debtMap.set(mId, current);
         });
       });
     });
@@ -104,6 +108,7 @@ export const useLedgerFilter = () => {
     setSearchQuery,
     activeTab,
     setActiveTab,
+    ledgerMembers,
     filteredMembers,
     stats,
   };

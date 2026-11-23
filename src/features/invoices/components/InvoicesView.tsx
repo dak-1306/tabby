@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useInvoicesFilter } from "../hooks/useInvoicesFilter";
@@ -8,7 +8,6 @@ import { InvoiceFilterBar } from "./InvoiceFilterBar";
 import { InvoiceStats } from "./InvoiceStats";
 import { InvoiceGrid } from "./InvoiceGrid";
 import { InvoiceDetailDrawer } from "@/components/common/InvoiceDetailDrawer";
-import { FormattedRecentInvoice } from "@/features/home/types";
 
 export const InvoicesView: React.FC = () => {
   const {
@@ -16,12 +15,23 @@ export const InvoicesView: React.FC = () => {
     setSearchQuery,
     activeTab,
     setActiveTab,
+    formattedInvoices,
     filteredInvoices,
     stats,
   } = useInvoicesFilter();
 
-  const [selectedInvoice, setSelectedInvoice] =
-    useState<FormattedRecentInvoice | null>(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
+    null,
+  );
+
+  const selectedInvoice = useMemo(
+    () =>
+      selectedInvoiceId
+        ? (formattedInvoices.find((inv) => inv.id === selectedInvoiceId) ??
+          null)
+        : null,
+    [formattedInvoices, selectedInvoiceId],
+  );
 
   return (
     <div className="flex flex-col h-full w-full bg-background text-foreground relative overflow-hidden">
@@ -39,13 +49,13 @@ export const InvoicesView: React.FC = () => {
 
         <InvoiceGrid
           invoices={filteredInvoices}
-          onSelectInvoice={(inv) => setSelectedInvoice(inv)}
+          onSelectInvoice={(inv) => setSelectedInvoiceId(inv.id)}
         />
       </main>
 
       <InvoiceDetailDrawer
         invoice={selectedInvoice}
-        onClose={() => setSelectedInvoice(null)}
+        onClose={() => setSelectedInvoiceId(null)}
       />
 
       <BottomNav />

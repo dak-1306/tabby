@@ -7,7 +7,7 @@ import {
   formatMemberDemandShareText,
   DetailedUnpaidBill,
 } from "@/utils/shareFormatters";
-import { TOAST_TEXTS } from "@/constants";
+import { INVOICE_STATUS, TOAST_TEXTS } from "@/constants";
 
 export const useMemberDetailDrawer = (
   member: MemberDebtSummary | null,
@@ -34,6 +34,8 @@ export const useMemberDetailDrawer = (
       .filter(
         (inv) =>
           inv.paidByMemberId === currentUserId &&
+          inv.status !== INVOICE_STATUS.COMPLETED &&
+          !(inv.paidMemberIds ?? []).includes(member.memberId) &&
           inv.items.some((item) =>
             item.assignedMemberIds.includes(member.memberId),
           ),

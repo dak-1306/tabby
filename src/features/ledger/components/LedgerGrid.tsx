@@ -7,6 +7,7 @@ import { ChevronRight, CheckCircle2 } from "lucide-react";
 import { LEDGER_PAGE_TEXTS } from "../constants";
 import { HOME_TEXTS } from "@/features/home/constants";
 import { CURRENCY_SYMBOL, LOCALE_VI } from "@/constants";
+import { cn } from "@/utils/utils";
 
 interface LedgerGridProps {
   members: LedgerMemberSummary[];
@@ -30,9 +31,12 @@ export const LedgerGrid: React.FC<LedgerGridProps> = ({
       {members.map((member) => (
         <Card
           key={member.memberId}
-          clickable={!member.isSettled}
-          onClick={() => !member.isSettled && onSelectMember(member)}
-          className="p-3 flex flex-col justify-between hover:border-primary/50 transition-all min-h-[88px] gap-2.5"
+          clickable
+          onClick={() => onSelectMember(member)}
+          className={cn(
+            "p-3 flex flex-col justify-between hover:border-primary/50 transition-all min-h-[88px] gap-2.5",
+            member.isSettled && "opacity-85",
+          )}
         >
           <div className="flex items-center gap-2 min-w-0">
             <div className="size-8 rounded-full bg-primary/15 border border-primary/30 text-primary flex items-center justify-center font-bold text-xs shrink-0">
@@ -53,8 +57,9 @@ export const LedgerGrid: React.FC<LedgerGridProps> = ({
           <div className="flex items-end justify-between pt-1.5 border-t border-border/40">
             <div className="min-w-0">
               {member.isSettled ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400">
-                  <CheckCircle2 className="size-3" /> Đã trả hết
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-500">
+                  <CheckCircle2 className="size-3" />
+                  {LEDGER_PAGE_TEXTS.SETTLED_BADGE_LABEL}
                 </span>
               ) : (
                 <>
@@ -68,9 +73,7 @@ export const LedgerGrid: React.FC<LedgerGridProps> = ({
                 </>
               )}
             </div>
-            {!member.isSettled && (
-              <ChevronRight className="size-3.5 text-muted-foreground shrink-0 mb-0.5" />
-            )}
+            <ChevronRight className="size-3.5 text-muted-foreground shrink-0 mb-0.5" />
           </div>
         </Card>
       ))}

@@ -9,4 +9,5 @@ export const LEDGER_PAGE_TEXTS = {
   EMPTY_SEARCH: "Không tìm thấy thành viên nào phù hợp.",
   SETTLED_STATUS_LABEL: "Đã sòng phẳng",
   ACTION_DEMAND: "Nhấn để xem chi tiết",
+  SETTLED_BADGE_LABEL: "Đã trả hết",
 } as const;

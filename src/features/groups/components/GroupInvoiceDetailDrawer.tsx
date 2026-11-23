@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -41,13 +41,13 @@ export const GroupInvoiceDetailDrawer: React.FC<
   GroupInvoiceDetailDrawerProps
 > = ({ groupId, invoice, members, onClose, onDeleteInvoice }) => {
   const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!invoice) return null;
 
   const payer = members.find((m) => m.id === invoice.paidByMemberId);
   const totalAmount = invoice.items.reduce((s, it) => s + it.price, 0);
 
-  // Cộng dồn phần chia chính xác trước, chỉ làm tròn khi hiển thị
   const perMemberTotals = new Map<string, number>();
   invoice.items.forEach((item) => {
     if (item.assignedMemberIds.length === 0) return;
@@ -64,13 +64,24 @@ export const GroupInvoiceDetailDrawer: React.FC<
   };
 
   const handleDelete = async () => {
-    await onDeleteInvoice(invoice.id);
-    toast.success(TOAST_TEXTS.DELETE_INVOICE_SUCCESS);
-    onClose();
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await onDeleteInvoice(invoice.id);
+      toast.success(TOAST_TEXTS.DELETE_INVOICE_SUCCESS);
+      onClose();
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
-    <Drawer open={Boolean(invoice)} onOpenChange={(open) => !open && onClose()}>
+    <Drawer
+      open={Boolean(invoice)}
+      onOpenChange={(open) => {
+        if (!open && !isDeleting) onClose();
+      }}
+    >
       <DrawerContent className="max-h-[88dvh] flex flex-col">
         <DrawerHeader className="text-left">
           <DrawerTitle className="text-base font-extrabold">
@@ -170,6 +181,7 @@ export const GroupInvoiceDetailDrawer: React.FC<
             <Button
               type="button"
               size="lg"
+              disabled={isDeleting}
               className="w-full gap-1.5 min-h-[44px] text-xs font-bold"
               onClick={handleCopyBill}
             >
@@ -181,6 +193,7 @@ export const GroupInvoiceDetailDrawer: React.FC<
               type="button"
               variant="secondary"
               size="lg"
+              disabled={isDeleting}
               className="w-full gap-1.5 min-h-[44px] text-xs font-bold"
               onClick={() => {
                 const editUrl = GROUP_ROUTES.CREATE_BILL(groupId, invoice.id);
@@ -198,13 +211,16 @@ export const GroupInvoiceDetailDrawer: React.FC<
             confirmTitle={DRAWER_TEXTS.DELETE_INVOICE_TITLE}
             confirmDesc={DRAWER_TEXTS.DELETE_INVOICE_DESC}
             onConfirm={handleDelete}
+            disabled={isDeleting}
             variant="destructive"
           />
 
           <DrawerClose
             render={
               <Button
+                type="button"
                 variant="ghost"
+                disabled={isDeleting}
                 className="w-full min-h-[44px]"
                 onClick={onClose}
               >

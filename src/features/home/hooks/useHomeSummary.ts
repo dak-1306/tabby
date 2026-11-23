@@ -16,12 +16,14 @@ export const useHomeSummary = (): HomeSummaryData => {
     const formattedInvoices: FormattedRecentInvoice[] = invoices.map((inv) => {
       let totalAmount = 0;
       let myReceivableForThisBill = 0;
+      const isBillCompleted = inv.status === INVOICE_STATUS.COMPLETED;
+      const paidSet = new Set(inv.paidMemberIds ?? []);
 
       inv.items.forEach((item) => {
         totalAmount += item.price;
         if (item.assignedMemberIds.length === 0) return;
 
-        // Dùng hàm làm tròn chuẩn 1.000đ cho phần chia mỗi người
+        // Luôn chia theo đủ tổng số người tham gia món ăn ban đầu
         const sharePerPerson = calculateItemShare(
           item.price,
           item.assignedMemberIds.length,
@@ -29,31 +31,33 @@ export const useHomeSummary = (): HomeSummaryData => {
 
         if (inv.paidByMemberId === currentUserId) {
           item.assignedMemberIds.forEach((mId) => {
-            if (mId !== currentUserId) {
+            if (mId === currentUserId) return;
+
+            const isMemberPaid = isBillCompleted || paidSet.has(mId);
+            if (!isMemberPaid) {
               myReceivableForThisBill += sharePerPerson;
 
-              if (inv.status !== INVOICE_STATUS.COMPLETED) {
-                const current = debtMap.get(mId) || {
-                  total: 0,
-                  billIds: new Set(),
-                };
-                current.total += sharePerPerson;
-                current.billIds.add(inv.id);
-                debtMap.set(mId, current);
-              }
+              const current = debtMap.get(mId) || {
+                total: 0,
+                billIds: new Set(),
+              };
+              current.total += sharePerPerson;
+              current.billIds.add(inv.id);
+              debtMap.set(mId, current);
             }
           });
         }
       });
 
-      if (inv.status !== INVOICE_STATUS.COMPLETED) {
+      const hasUncollected = !isBillCompleted && myReceivableForThisBill > 0;
+      if (hasUncollected) {
         unpaidBillSet.add(inv.id);
       }
 
-      const collectedAmount =
-        inv.status === INVOICE_STATUS.COMPLETED
-          ? totalAmount
-          : Math.max(0, totalAmount - myReceivableForThisBill);
+      const collectedAmount = Math.max(
+        0,
+        totalAmount - myReceivableForThisBill,
+      );
 
       return {
         id: inv.id,
@@ -61,9 +65,8 @@ export const useHomeSummary = (): HomeSummaryData => {
         date: new Date(inv.createdAt).toLocaleDateString(LOCALE_VI),
         totalAmount,
         collectedAmount,
-        uncollectedAmount:
-          inv.status === INVOICE_STATUS.COMPLETED ? 0 : myReceivableForThisBill,
-        status: inv.status,
+        uncollectedAmount: myReceivableForThisBill,
+        status: hasUncollected ? inv.status : INVOICE_STATUS.COMPLETED,
       };
     });
 

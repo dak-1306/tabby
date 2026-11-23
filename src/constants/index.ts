@@ -60,9 +60,14 @@ export const CREATE_TEXTS = {
 export const DRAWER_TEXTS = {
   TOTAL_OWED_LABEL: "Tổng nợ:",
   UNPAID_INVOICES_TITLE: "Các khoản chưa gạch nợ",
+  NO_UNPAID_INVOICES: "Thành viên này đã thanh toán hết các khoản nợ.",
   BTN_COPY_DEMAND: "Sao chép tin nhắn đòi tiền",
+  BTN_COPY_DETAILED: "Copy Chi Tiết",
+  BTN_COPY_COMPACT: "Copy Tóm Tắt",
   BTN_CLEAR_DEBT: "Gạch nợ toàn bộ",
+  BTN_DEBT_CLEARED: "Đã gạch nợ (Sòng phẳng)",
   BTN_MARK_COMPLETED: "Đánh dấu hoàn tất bill",
+  BTN_ALREADY_COMPLETED: "Đã hoàn tất hóa đơn",
   BTN_COPY_SUMMARY: "Sao chép tóm tắt gửi nhóm",
   BTN_EDIT_INVOICE: "Chỉnh sửa hóa đơn",
   BTN_DELETE_INVOICE: "Xóa hóa đơn này",
@@ -75,6 +80,11 @@ export const DRAWER_TEXTS = {
   MEMBER_HAS_DEBT_WARNING: "Cần gạch nợ hết trước khi xóa thành viên này.",
   BTN_CLOSE: "Đóng",
   INVOICE_ITEMS_TITLE: "Danh sách món đã chia",
+  PAID_BADGE_LABEL: "Đã trả",
+  ARIA_SAVE_NAME: "Lưu tên",
+  ARIA_EDIT_MEMBER_NAME: "Đổi tên thành viên",
+  INVOICE_DATE_PREFIX: "Ngày:",
+  INVOICE_TOTAL_PREFIX: "• Tổng:",
 } as const;
 
 export const TOAST_TEXTS = {
@@ -207,6 +217,8 @@ export const GROUP_DETAIL_TEXTS = {
   SPLIT_ARROW: "→",
   BTN_COPY_PAIR_ZALO: "Sao chép đối soát gửi Zalo",
   BTN_SETTLE_PAIR: "Chốt nợ (Đã thanh toán)",
+  BTN_SETTLING_PAIR: "Đang ghi nhận chốt nợ...",
+  BTN_PAIR_SETTLED: "Đã chốt nợ sòng phẳng",
   SETTLE_CONFIRM_TITLE: "Xác nhận đã thanh toán khoản này?",
   SETTLE_CONFIRM_DESC:
     "Hệ thống sẽ ghi nhận giao dịch chốt nợ và đưa số dư giữa 2 người về 0 đ.",

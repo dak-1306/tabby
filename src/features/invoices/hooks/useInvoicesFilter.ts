@@ -14,12 +14,14 @@ export const useInvoicesFilter = () => {
     return invoices.map((inv) => {
       let totalAmount = 0;
       let myReceivable = 0;
+      const isBillCompleted = inv.status === INVOICE_STATUS.COMPLETED;
+      const paidSet = new Set(inv.paidMemberIds ?? []);
 
       inv.items.forEach((item) => {
         totalAmount += item.price;
         if (item.assignedMemberIds.length === 0) return;
 
-        // Dùng hàm làm tròn chuẩn 1.000đ cho phần chia mỗi người
+        // Luôn chia theo tổng số người tham gia món ban đầu
         const share = calculateItemShare(
           item.price,
           item.assignedMemberIds.length,
@@ -27,15 +29,17 @@ export const useInvoicesFilter = () => {
 
         if (inv.paidByMemberId === currentUserId) {
           item.assignedMemberIds.forEach((mId) => {
-            if (mId !== currentUserId) myReceivable += share;
+            if (mId === currentUserId) return;
+            const isMemberPaid = isBillCompleted || paidSet.has(mId);
+            if (!isMemberPaid) {
+              myReceivable += share;
+            }
           });
         }
       });
 
-      const collectedAmount =
-        inv.status === INVOICE_STATUS.COMPLETED
-          ? totalAmount
-          : Math.max(0, totalAmount - myReceivable);
+      const hasUncollected = !isBillCompleted && myReceivable > 0;
+      const collectedAmount = Math.max(0, totalAmount - myReceivable);
 
       return {
         id: inv.id,
@@ -43,9 +47,8 @@ export const useInvoicesFilter = () => {
         date: new Date(inv.createdAt).toLocaleDateString(LOCALE_VI),
         totalAmount,
         collectedAmount,
-        uncollectedAmount:
-          inv.status === INVOICE_STATUS.COMPLETED ? 0 : myReceivable,
-        status: inv.status,
+        uncollectedAmount: myReceivable,
+        status: hasUncollected ? inv.status : INVOICE_STATUS.COMPLETED,
       };
     });
   }, [invoices, currentUserId]);
@@ -91,6 +94,7 @@ export const useInvoicesFilter = () => {
     setSearchQuery,
     activeTab,
     setActiveTab,
+    formattedInvoices,
     filteredInvoices,
     stats,
   };

@@ -14,7 +14,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/common/MemberAvatar";
 import { InlineConfirmButton } from "@/components/common/InlineConfirmButton";
-import { ArrowRight, Copy, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ArrowRight,
+  Copy,
+  FileText,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import {
   CURRENCY_SYMBOL,
   DRAWER_TEXTS,
@@ -42,8 +48,12 @@ export const GroupSettlementDetailDrawer: React.FC<
   GroupSettlementDetailDrawerProps
 > = ({ groupName, pair, onClose, onSettlePair }) => {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
+  const [isSettling, setIsSettling] = useState(false);
 
   if (!pair) return null;
+
+  const isSettled = pair.netAmount <= 0;
+  const isSettleDisabled = isSettled || isSettling;
 
   const toggleExpand = (id: string) => {
     setExpandedIds((prev) =>
@@ -51,20 +61,37 @@ export const GroupSettlementDetailDrawer: React.FC<
     );
   };
 
-  const handleCopy = () => {
-    const text = formatPairSettlementShareText(groupName, pair);
+  const handleCopy = (isDetailed: boolean) => {
+    const text = formatPairSettlementShareText(groupName, pair, isDetailed);
     navigator.clipboard.writeText(text);
     toast.success(GROUP_DETAIL_TEXTS.COPY_PAIR_SUCCESS);
   };
 
   const handleConfirmSettle = async () => {
-    await onSettlePair(pair.fromMember.id, pair.toMember.id, pair.netAmount);
-    toast.success(GROUP_DETAIL_TEXTS.SETTLE_SUCCESS);
-    onClose();
+    if (isSettleDisabled) return;
+    setIsSettling(true);
+    try {
+      await onSettlePair(pair.fromMember.id, pair.toMember.id, pair.netAmount);
+      toast.success(GROUP_DETAIL_TEXTS.SETTLE_SUCCESS);
+      onClose();
+    } finally {
+      setIsSettling(false);
+    }
   };
 
+  const settleButtonLabel = isSettling
+    ? GROUP_DETAIL_TEXTS.BTN_SETTLING_PAIR
+    : isSettled
+      ? GROUP_DETAIL_TEXTS.BTN_PAIR_SETTLED
+      : GROUP_DETAIL_TEXTS.BTN_SETTLE_PAIR;
+
   return (
-    <Drawer open={Boolean(pair)} onOpenChange={(open) => !open && onClose()}>
+    <Drawer
+      open={Boolean(pair)}
+      onOpenChange={(open) => {
+        if (!open && !isSettling) onClose();
+      }}
+    >
       <DrawerContent className="max-h-[88dvh] flex flex-col">
         <DrawerHeader>
           <div className="flex items-center justify-center gap-3 pt-1">
@@ -196,28 +223,46 @@ export const GroupSettlementDetailDrawer: React.FC<
         </div>
 
         <DrawerFooter className="flex-col gap-2 pt-3">
-          <Button
-            type="button"
-            size="lg"
-            className="w-full gap-2 min-h-[44px] font-bold text-xs"
-            onClick={handleCopy}
-          >
-            <Copy className="size-4" />
-            {GROUP_DETAIL_TEXTS.BTN_COPY_PAIR_ZALO}
-          </Button>
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <Button
+              type="button"
+              size="lg"
+              disabled={isSettleDisabled}
+              className="w-full gap-1.5 min-h-[44px] text-xs font-bold"
+              onClick={() => handleCopy(true)}
+            >
+              <FileText className="size-4" />
+              {DRAWER_TEXTS.BTN_COPY_DETAILED}
+            </Button>
+
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              disabled={isSettleDisabled}
+              className="w-full gap-1.5 min-h-[44px] text-xs font-bold"
+              onClick={() => handleCopy(false)}
+            >
+              <Copy className="size-4" />
+              {DRAWER_TEXTS.BTN_COPY_COMPACT}
+            </Button>
+          </div>
 
           <InlineConfirmButton
-            buttonText={GROUP_DETAIL_TEXTS.BTN_SETTLE_PAIR}
+            buttonText={settleButtonLabel}
             confirmTitle={GROUP_DETAIL_TEXTS.SETTLE_CONFIRM_TITLE}
             confirmDesc={GROUP_DETAIL_TEXTS.SETTLE_CONFIRM_DESC}
             onConfirm={handleConfirmSettle}
+            disabled={isSettleDisabled}
             variant="outline"
           />
 
           <DrawerClose
             render={
               <Button
+                type="button"
                 variant="ghost"
+                disabled={isSettling}
                 className="w-full min-h-[44px]"
                 onClick={onClose}
               >

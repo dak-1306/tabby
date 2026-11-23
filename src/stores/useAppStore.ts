@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { AppState, Member } from "@/types";
+import { AppState, Invoice, Member } from "@/types";
 import { STORAGE_KEY } from "@/constants";
 
 const initialMembers: Member[] = [
@@ -12,6 +12,14 @@ const DEFAULT_HOST_NAMES = ["bạn (host)", "tôi", "bạn", "host"];
 const isDefaultHostName = (name?: string): boolean =>
   !name || DEFAULT_HOST_NAMES.includes(name.trim().toLowerCase());
 
+const getInvoiceParticipantIds = (invoice: Invoice): string[] => {
+  const ids = new Set<string>();
+  invoice.items.forEach((item) => {
+    item.assignedMemberIds.forEach((id) => ids.add(id));
+  });
+  return Array.from(ids);
+};
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
@@ -20,13 +28,31 @@ export const useAppStore = create<AppState>()(
       invoices: [],
 
       addInvoice: (invoice) =>
-        set((state) => ({ invoices: [invoice, ...state.invoices] })),
+        set((state) => ({
+          invoices: [{ ...invoice, paidMemberIds: [] }, ...state.invoices],
+        })),
 
       updateInvoice: (updatedInvoice) =>
         set((state) => ({
-          invoices: state.invoices.map((inv) =>
-            inv.id === updatedInvoice.id ? updatedInvoice : inv,
-          ),
+          invoices: state.invoices.map((inv) => {
+            if (inv.id !== updatedInvoice.id) return inv;
+
+            const participants = getInvoiceParticipantIds(updatedInvoice);
+            const validPaidIds = (inv.paidMemberIds ?? []).filter((id) =>
+              participants.includes(id),
+            );
+            const hasUnpaidOthers = participants.some(
+              (id) =>
+                id !== updatedInvoice.paidByMemberId &&
+                !validPaidIds.includes(id),
+            );
+
+            return {
+              ...updatedInvoice,
+              paidMemberIds: validPaidIds,
+              status: hasUnpaidOthers ? "partial" : "completed",
+            };
+          }),
         })),
 
       deleteInvoice: (invoiceId) =>
@@ -36,34 +62,38 @@ export const useAppStore = create<AppState>()(
 
       markInvoiceCompleted: (invoiceId) =>
         set((state) => ({
-          invoices: state.invoices.map((inv) =>
-            inv.id === invoiceId ? { ...inv, status: "completed" } : inv,
-          ),
+          invoices: state.invoices.map((inv) => {
+            if (inv.id !== invoiceId) return inv;
+            return {
+              ...inv,
+              status: "completed",
+              paidMemberIds: getInvoiceParticipantIds(inv),
+            };
+          }),
         })),
 
       clearMemberDebt: (memberId) =>
         set((state) => ({
           invoices: state.invoices.map((inv) => {
             if (inv.paidByMemberId !== state.currentUserId) return inv;
-            const hasMemberInItems = inv.items.some((item) =>
-              item.assignedMemberIds.includes(memberId),
-            );
-            if (!hasMemberInItems) return inv;
+            if (inv.status === "completed") return inv;
 
-            const updatedItems = inv.items.map((item) => ({
-              ...item,
-              assignedMemberIds: item.assignedMemberIds.filter(
-                (id) => id !== memberId,
-              ),
-            }));
+            const participants = getInvoiceParticipantIds(inv);
+            if (!participants.includes(memberId)) return inv;
 
-            const remainingUnpaidOthers = updatedItems.some((item) =>
-              item.assignedMemberIds.some((id) => id !== state.currentUserId),
+            const currentPaidIds = inv.paidMemberIds ?? [];
+            if (currentPaidIds.includes(memberId)) return inv;
+
+            // Giữ nguyên assignedMemberIds trên từng món, chỉ ghi nhận memberId đã trả nợ
+            const nextPaidIds = [...currentPaidIds, memberId];
+            const remainingUnpaidOthers = participants.some(
+              (id) =>
+                id !== state.currentUserId && !nextPaidIds.includes(id),
             );
 
             return {
               ...inv,
-              items: updatedItems,
+              paidMemberIds: nextPaidIds,
               status: remainingUnpaidOthers ? "partial" : "completed",
             };
           }),
@@ -97,7 +127,6 @@ export const useAppStore = create<AppState>()(
         set((state) => {
           const oldUserId = state.currentUserId;
 
-          // Nếu đã mang ID Google -> Chỉ cập nhật tên/avatar nếu đang là tên mặc định
           if (oldUserId === newUserId) {
             if (!profile?.name) return state;
             return {
@@ -115,7 +144,6 @@ export const useAppStore = create<AppState>()(
             };
           }
 
-          // Chuyển toàn bộ tham chiếu từ oldUserId ("m1") sang Google User ID
           const hasTargetMember = state.members.some((m) => m.id === newUserId);
           const updatedMembers = hasTargetMember
             ? state.members.filter((m) => m.id !== oldUserId)
@@ -137,6 +165,15 @@ export const useAppStore = create<AppState>()(
             ...inv,
             paidByMemberId:
               inv.paidByMemberId === oldUserId ? newUserId : inv.paidByMemberId,
+            paidMemberIds: inv.paidMemberIds
+              ? Array.from(
+                  new Set(
+                    inv.paidMemberIds.map((id) =>
+                      id === oldUserId ? newUserId : id,
+                    ),
+                  ),
+                )
+              : undefined,
             items: inv.items.map((item) => ({
               ...item,
               assignedMemberIds: Array.from(
